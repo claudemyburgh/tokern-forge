@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { Menu, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 const navLinks = [
-    { href: '#features', label: 'Features' },
+    { href: '#create-token', label: 'Create Token' },
     { href: '#pricing', label: 'Pricing' },
     { href: '#about', label: 'About' },
 ];
@@ -14,10 +14,11 @@ export default function Navigation() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
+            <div className="container mx-auto flex h-14 items-center">
                 <div className="mr-4 hidden md:flex">
                     <a href="/" className="mr-6 flex items-center space-x-2">
-                        <span className="hidden font-bold sm:inline-block">My App</span>
+                        <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`}/>
+                        <span className="hidden font-bold sm:inline-block">Token Forge</span>
                     </a>
                     <nav className="flex items-center space-x-6 text-sm font-medium">
                         {navLinks.map((link) => (
@@ -45,9 +46,10 @@ export default function Navigation() {
                             <Menu className="h-4 w-4" />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left">
+                    <SheetContent side="right" className={`p-6`}>
                         <a href="/" className="mr-6 flex items-center space-x-2">
-                            <span className="font-bold">My App</span>
+                            <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`}/>
+                            <span className="font-bold">Token Forge</span>
                         </a>
                         <div className="divide-y divide-border">
                             <nav className="grid gap-2 py-6">
