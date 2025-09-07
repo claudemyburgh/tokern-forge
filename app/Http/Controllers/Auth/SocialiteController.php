@@ -26,6 +26,7 @@ class SocialiteController extends Controller
                 'provider' => $provider,
                 'provider_id' => $socialiteUser->getId(),
                 'provider_token' => $socialiteUser->token,
+                'avatar' => $socialiteUser->getAvatar(),
             ]);
         } else {
             $user = User::create([
@@ -34,6 +35,7 @@ class SocialiteController extends Controller
                 'provider' => $provider,
                 'provider_id' => $socialiteUser->getId(),
                 'provider_token' => $socialiteUser->token,
+                'avatar' => $socialiteUser->getAvatar(),
                 'password' => null,
             ]);
         }

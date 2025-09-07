@@ -121,7 +121,7 @@ export interface NorthernLightsBackgroundProps extends React.HTMLAttributes<HTML
 
 export const NorthernLightsBackground = forwardRef<HTMLDivElement, NorthernLightsBackgroundProps>(({
   className,
-  colorStops = ["#ff8127", "#b067ff", "#fffb27"],
+  colorStops = ["#5227FF", "#7cff67", "#5227FF"],
   amplitude = 1.0,
   blend = 0.5,
   time,

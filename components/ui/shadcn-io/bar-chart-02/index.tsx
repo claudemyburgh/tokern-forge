@@ -19,7 +19,6 @@ const chartData = [
   { month: "April", desktop: 73 },
   { month: "May", desktop: 209 },
   { month: "June", desktop: 214 },
-
 ]
 
 const chartConfig = {
@@ -43,7 +42,7 @@ export function ChartBarDefault() {
             <XAxis
               dataKey="month"
               tickLine={false}
-              tickMargin={2}
+              tickMargin={10}
               axisLine={false}
               tickFormatter={(value) => value.slice(0, 3)}
             />
@@ -51,7 +50,7 @@ export function ChartBarDefault() {
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
-            <Bar dataKey="desktop" fill="var(--color-primary)" radius={8} />
+            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={8} />
           </BarChart>
         </ChartContainer>
       </div>
