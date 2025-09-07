@@ -20,9 +20,9 @@ export default function Hero() {
 
         <section className="max-w-xl mx-auto flex flex-col items-center justify-center gap-6 pb-8 pt-6 text-center md:pb-12 md:pt-10 lg:py-32">
 
-
             <div className="mx-auto flex max-w-[980px] flex-col items-center gap-2">
                 <h1 className="text-3xl text-balance font-extrabold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]">
+
                     Create the Next Viral Meme Coin
                 </h1>
                 <p className="max-w-[700px] text-balance text-lg text-muted-foreground">
@@ -30,10 +30,10 @@ export default function Hero() {
                 </p>
             </div>
             <div className="flex gap-4">
-                <Button asChild>
+                <Button size={`lg`} asChild>
                     <Link href="/register">Get Started</Link>
                 </Button>
-                <Button variant="outline" asChild>
+                <Button size={`lg`} variant="outline" asChild>
                     <Link href="#features">Learn More</Link>
                 </Button>
             </div>

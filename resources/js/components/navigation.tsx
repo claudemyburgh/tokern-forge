@@ -18,6 +18,8 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Zap } from 'lucide-react';
 import { useState } from 'react';
+import AppLogo from '@/components/app-logo';
+import AppLogoIcon from '@/components/app-logo-icon';
 
 const tokens: { title: string; href: string; description: string }[] = [
     {
@@ -45,8 +47,11 @@ export default function Navigation() {
             <div className="container mx-auto flex h-14 items-center">
                 <div className="mr-4 hidden md:flex">
                     <a href="/" className="mr-6 flex items-center space-x-2">
-                        <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`} />
-                        <span className="hidden font-bold sm:inline-block">Token Forge</span>
+                        <span className="size-10 bg-primary -rotate-2 justify-center text-center items-center flex rounded-md">
+                            <AppLogoIcon className="size-6" />
+                        </span>
+
+                        <span className="hidden font-bungee text-lg sm:inline-block">Token Forge</span>
                     </a>
                     <NavigationMenu>
                         <NavigationMenuList>
