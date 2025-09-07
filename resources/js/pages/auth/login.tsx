@@ -1,5 +1,6 @@
 import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/input-error';
+import SocialLoginButtons from '@/components/social-login-buttons';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,7 +22,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
             <Head title="Log in" />
 
-            <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="flex flex-col gap-6">
+            <Form
+                {...AuthenticatedSessionController.store.form()}
+                resetOnSuccess={['password']}
+                className="flex flex-col gap-6"
+            >
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
@@ -71,16 +76,24 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 Log in
                             </Button>
                         </div>
-
-                        <div className="text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={register()} tabIndex={5}>
-                                Sign up
-                            </TextLink>
-                        </div>
                     </>
                 )}
             </Form>
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+            </div>
+            <SocialLoginButtons />
+            <div className="text-center text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <TextLink href={register()} tabIndex={5}>
+                    Sign up
+                </TextLink>
+            </div>
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
         </AuthLayout>

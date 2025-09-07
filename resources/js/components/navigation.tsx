@@ -1,3 +1,4 @@
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Zap } from 'lucide-react';
@@ -17,7 +18,7 @@ export default function Navigation() {
             <div className="container mx-auto flex h-14 items-center">
                 <div className="mr-4 hidden md:flex">
                     <a href="/" className="mr-6 flex items-center space-x-2">
-                        <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`}/>
+                        <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`} />
                         <span className="hidden font-bold sm:inline-block">Token Forge</span>
                     </a>
                     <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -36,7 +37,8 @@ export default function Navigation() {
                     <div className="w-full flex-1 md:w-auto md:flex-none">
                         {/* You can add a search bar here if needed */}
                     </div>
-                    <nav className="hidden md:flex">
+                    <nav className="hidden md:flex items-center gap-2">
+                        <AppearanceToggleDropdown />
                         <Button>Get Started</Button>
                     </nav>
                 </div>
@@ -47,10 +49,15 @@ export default function Navigation() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="right" className={`p-6`}>
-                        <a href="/" className="mr-6 flex items-center space-x-2">
-                            <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`}/>
-                            <span className="font-bold">Token Forge</span>
-                        </a>
+                        <div className="mb-6 flex items-center justify-between">
+                            <a href="/" className="flex items-center space-x-2">
+                                <Zap
+                                    className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`}
+                                />
+                                <span className="font-bold">Token Forge</span>
+                            </a>
+                            <AppearanceToggleDropdown />
+                        </div>
                         <div className="divide-y divide-border">
                             <nav className="grid gap-2 py-6">
                                 {navLinks.map((link) => (

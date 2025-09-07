@@ -2,7 +2,7 @@ import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
 export interface Auth {
-    user: User;
+    user: User | null;
 }
 
 export interface BreadcrumbItem {
@@ -38,5 +38,6 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    has_password?: boolean;
     [key: string]: unknown; // This allows for additional properties...
 }
