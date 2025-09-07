@@ -3,25 +3,23 @@
 import { Button } from '@/components/ui/button';
 
 import { Link } from '@inertiajs/react';
-import { NorthernLightsBackground } from '../../../components/ui/shadcn-io/northern-lights-background';
+
+import {Zap} from "lucide-react";
 
 
 
 export default function Hero() {
     return (
         <div className="w-full relative isolate">
-            <NorthernLightsBackground
-                className={`min-h-150 absolute -top-20 -z-10 opacity-25 dark:opacity-75`}
 
-                colorStops={["#ec4899", "#a855f7", "#06b6d4"]}
-                amplitude={2.0}
-                speed={0.25}
-            />
 
         <section className="max-w-xl mx-auto flex flex-col items-center justify-center gap-6 pb-8 pt-6 text-center md:pb-12 md:pt-10 lg:py-32">
 
-
-            <div className="mx-auto flex max-w-[980px] flex-col items-center gap-2">
+            <div className="inline-flex items-center rounded-full border px-4 py-2 text-sm mb-0 bg-white/50 dark:bg-black/50 backdrop-blur-md">
+                <Zap className="mr-2 h-4 w-4 text-primary fill-primary" />
+                <span className="text-muted-foreground">Powered by Solana</span>
+            </div>
+            <div className="mx-auto flex max-w-[980px] flex-col items-center gap-2 text-shadow">
                 <h1 className="text-3xl text-balance font-extrabold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]">
                     Create the Next Viral Meme Coin
                 </h1>
