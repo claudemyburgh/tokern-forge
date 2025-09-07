@@ -1,5 +1,5 @@
 import Footer from '@/components/footer';
-import Navigation from '@/components/navigation';
+import { AppHeader } from '@/components/app-header';
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +11,7 @@ interface LandingLayoutProps {
 export default function LandingLayout({ children, className }: LandingLayoutProps) {
     return (
         <div className={cn('flex min-h-screen flex-col', className)}>
-            <Navigation />
+            <AppHeader />
             <main className="flex-grow">{children}</main>
             <Footer />
         </div>
