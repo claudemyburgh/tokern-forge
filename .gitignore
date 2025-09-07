@@ -1,12 +1,9 @@
 /.phpunit.cache
-/bootstrap/ssr
 /node_modules
-/public/build
+!public/build
 /public/hot
 /public/storage
-/resources/js/actions
-/resources/js/routes
-/resources/js/wayfinder
+\!/public/storage/app/packages
 /storage/*.key
 /storage/pail
 /vendor
@@ -17,9 +14,9 @@
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
+auth.json
 npm-debug.log
 yarn-error.log
-/auth.json
 /.fleet
 /.idea
 /.nova
