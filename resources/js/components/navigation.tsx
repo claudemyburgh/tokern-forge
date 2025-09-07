@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import * as React from 'react';
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import UserNav from '@/components/user-nav';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,6 @@ import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Zap } from 'lucide-react';
 import { useState } from 'react';
-import AppLogo from '@/components/app-logo';
-import AppLogoIcon from '@/components/app-logo-icon';
 
 const tokens: { title: string; href: string; description: string }[] = [
     {
@@ -47,11 +46,8 @@ export default function Navigation() {
             <div className="container mx-auto flex h-14 items-center">
                 <div className="mr-4 hidden md:flex">
                     <a href="/" className="mr-6 flex items-center space-x-2">
-                        <span className="size-10 bg-primary -rotate-2 justify-center text-center items-center flex rounded-md">
-                            <AppLogoIcon className="size-6" />
-                        </span>
-
-                        <span className="hidden font-bungee text-lg sm:inline-block">Token Forge</span>
+                        <Zap className={`size-9 bg-white text-primary fill-primary rounded-sm p-1.5 -rotate-2`} />
+                        <span className="hidden font-bold sm:inline-block">Token Forge</span>
                     </a>
                     <NavigationMenu>
                         <NavigationMenuList>
@@ -120,6 +116,26 @@ export default function Navigation() {
                                 >
                                     Home
                                 </a>
+                                <Accordion type="single" collapsible className="w-full">
+                                    <AccordionItem value="item-1">
+                                        <AccordionTrigger>Tokens</AccordionTrigger>
+                                        <AccordionContent>
+                                            <ul className="grid gap-3 p-4">
+                                                {tokens.map((token) => (
+                                                    <ListItem
+                                                        key={token.title}
+                                                        href={token.href}
+                                                        title={token.title}
+                                                        onClick={() => setIsOpen(false)}
+                                                    >
+                                                        {token.description}
+                                                    </ListItem>
+                                                ))}
+                                            </ul>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+
                                 <a
                                     href="#"
                                     className="flex items-center space-x-2 rounded-md p-2 hover:bg-accent"

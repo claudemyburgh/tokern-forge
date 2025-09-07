@@ -20,10 +20,10 @@ export default function UserNav() {
         return (
             <div className="flex items-center gap-2">
                 <Button asChild>
-                    <Link href="#">Login</Link>
+                    <Link href={route('login')}>Login</Link>
                 </Button>
                 <Button asChild variant="secondary">
-                    <Link href="#">Register</Link>
+                    <Link href={route('register')}>Register</Link>
                 </Button>
             </div>
         );

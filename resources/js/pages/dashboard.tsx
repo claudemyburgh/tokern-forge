@@ -1,11 +1,10 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-
 import { type BreadcrumbItem, PageProps } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Terminal } from 'lucide-react';
-
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,11 +14,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard() {
+    const { auth } = usePage<PageProps>().props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-
                 {!auth.user.has_password && (
                     <Alert>
                         <Terminal className="h-4 w-4" />
