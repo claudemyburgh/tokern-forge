@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
+    navigationBold,
     NavigationMenu,
     NavigationMenuContent,
     NavigationMenuItem,
@@ -13,25 +14,26 @@ import {
     navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, ChevronDown, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import {  ChevronDown,  Menu, Search } from 'lucide-react';
 import * as React from 'react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-import route from 'ziggy-js';
+
 import AppearanceToggleTab from './appearance-tabs';
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 
 const navLinks = [
     {
         label: 'Home',
-        href: route('home'),
+        href: 'home',
     },
     {
         label: 'Tokens',
@@ -82,9 +84,6 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWit
     },
 );
 ListItem.displayName = 'ListItem';
-
-const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
-
 interface AppHeaderProps {
     breadcrumbs?: BreadcrumbItem[];
 }
@@ -95,8 +94,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const getInitials = useInitials();
     return (
         <>
-            <div className="border-b border-sidebar-border/80">
-                <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
+            <div className="border-b bg-background/90 backdrop-blur-md border-sidebar-border/80 fixed top-0 inset-x-0 z-100">
+                <div className="mx-auto flex h-16 items-center px-4 container">
                     {/* Mobile Menu */}
                     <div className="lg:hidden">
                         <Sheet>
@@ -105,7 +104,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <Menu className="h-5 w-5" />
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar">
+                            <SheetContent side="left" className="flex h-full w-72 flex-col items-stretch justify-between bg-sidebar">
                                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
                                     <AppLogoIcon className="h-6 w-6 fill-current text-black dark:text-white" />
@@ -145,11 +144,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <div className="flex flex-col space-y-2">
                                         {!auth.user && (
                                             <>
-                                                <Link href={route('login')} className="rounded-md px-2 py-1.5 font-medium">
+                                                <Link href={'/login'} className="rounded-md px-2 py-1.5 font-medium">
                                                     Login
                                                 </Link>
                                                 <Link
-                                                    href={route('register')}
+                                                    href={'/register'}
                                                     className="rounded-md px-2 py-1.5 font-medium"
                                                 >
                                                     Register
@@ -176,10 +175,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         <NavigationMenuItem key={link.label}>
                                             <NavigationMenuTrigger>{link.label}</NavigationMenuTrigger>
                                             <NavigationMenuContent>
-                                                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                                                <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                                                     {link.sub.map((subLink) => (
                                                         <ListItem key={subLink.label} href={subLink.href} title={subLink.label}>
-                                                            {/* TODO: Add description for sub links */}
+                                                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolores, nostrum!
+
                                                         </ListItem>
                                                     ))}
                                                 </ul>
@@ -201,9 +201,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                     <div className="ml-auto flex items-center space-x-2">
                         <div className="relative flex items-center space-x-1">
-                            <Button variant="ghost" size="icon" className="group h-9 w-9 cursor-pointer">
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
-                            </Button>
+                            <AppearanceToggleDropdown/>
                         </div>
                         {auth.user ? (
                             <DropdownMenu>
@@ -223,10 +221,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             </DropdownMenu>
                         ) : (
                             <div className="hidden md:flex items-center gap-2">
-                                <Link href={route('login')} className={cn(navigationMenuTriggerStyle())}>
+                                <Link href={'login'} className={cn(navigationBold())}>
                                     Login
                                 </Link>
-                                <Link href={route('register')} className={cn(navigationMenuTriggerStyle())}>
+                                <Link href={'register'} className={cn(navigationBold())}>
                                     Register
                                 </Link>
                             </div>
