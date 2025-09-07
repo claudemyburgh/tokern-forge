@@ -24,6 +24,7 @@ class User extends Authenticatable
         'provider',
         'provider_id',
         'provider_token',
+        'avatar',
     ];
 
     /**
@@ -56,5 +57,13 @@ class User extends Authenticatable
     public function hasPassword(): bool
     {
         return $this->password !== null;
+    }
+
+    /**
+     * Get the user's avatar.
+     */
+    public function getAvatarAttribute(?string $avatar): string
+    {
+        return $avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($this->name);
     }
 }
