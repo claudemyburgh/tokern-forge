@@ -24,5 +24,11 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $this->call([
+            RolePermissionSeeder::class,
+        ]);
+
+        User::factory(10)->create();
     }
 }
