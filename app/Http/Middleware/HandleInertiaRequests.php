@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\User\UserResource;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -43,15 +44,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'bio' => $request->user()->bio,
-                    'roles' => $request->user()->roles->pluck('name'),
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name'),
-                    'is_super_admin' => $request->user()->isSuperAdmin(),
-                ] : null,
+                'user' => $request->user()
+                    ? UserResource::make($request->user())->resolve()
+                    : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

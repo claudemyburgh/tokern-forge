@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
 import { CameraIcon, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Dropzone from 'react-dropzone';
 import { toast } from 'sonner';
 
@@ -119,6 +119,14 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
     const hasUploadedAvatar =
         user.avatar && !user.avatar.includes('ui-avatars.com');
 
+    useEffect(() => {
+        return () => {
+            if (profilePicture) {
+                URL.revokeObjectURL(profilePicture);
+            }
+        };
+    }, [profilePicture]);
+
     const handleFileSelect = (file: File) => {
         // Show preview immediately
         const imageUrl = URL.createObjectURL(file);
@@ -139,7 +147,6 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
         router.post(AvatarController.update(), formData, {
             forceFormData: true,
             onSuccess: () => {
-                setProfilePicture(null);
                 setIsUploading(false);
                 toast.success('Your avatar has been updated successfully');
                 // Refresh to show new avatar
@@ -151,7 +158,7 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
                         Object.values(errors).join(', ') || 'Please try again.',
                     richColors: true,
                 });
-                setProfilePicture(null);
+                handleRemovePreview();
                 setIsUploading(false);
             },
         });
@@ -178,11 +185,10 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
     };
 
     const handleRemovePreview = () => {
-        setProfilePicture(null);
-        // Clean up the object URL to prevent memory leaks
         if (profilePicture) {
             URL.revokeObjectURL(profilePicture);
         }
+        setProfilePicture(null);
     };
 
     const handleDrop = (files: File[]) => {
