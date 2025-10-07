@@ -5,6 +5,7 @@ import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
 import { CameraIcon, Loader2 } from 'lucide-react';
@@ -279,7 +280,7 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
                                             id="profile"
                                         />
                                         {isUploading ? (
-                                            <Loader2 className="size-8 animate-spin" />
+                                            <Spinner />
                                         ) : (
                                             <CameraIcon
                                                 className="size-8"
@@ -312,7 +313,7 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
                         >
                             {isDeleting ? (
                                 <>
-                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                    <Spinner className={`mr-2`} />
                                     Removing...
                                 </>
                             ) : (
