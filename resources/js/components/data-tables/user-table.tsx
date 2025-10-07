@@ -1,6 +1,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -18,13 +35,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     ColumnDef,
-    SortingState,
     flexRender,
     getCoreRowModel,
+    SortingState,
     useReactTable,
+    VisibilityState,
 } from '@tanstack/react-table';
 import axios, { AxiosError } from 'axios';
 import {
@@ -33,11 +51,16 @@ import {
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Columns3,
+    Eye,
     Filter,
+    MoreVertical,
+    Pencil,
     Search,
+    Trash2,
     X,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 // Types
 interface Media {
@@ -110,6 +133,17 @@ interface FetchUsersParams {
     verified_filter: string;
 }
 
+interface UserTableProps {
+    permissions?: {
+        canView?: boolean;
+        canEdit?: boolean;
+        canDelete?: boolean;
+    };
+    hiddenColumns?: string[];
+    onView?: (user: User) => void;
+    onEdit?: (user: User) => void;
+}
+
 // Fetch users function
 const fetchUsers = async (params: FetchUsersParams): Promise<UsersResponse> => {
     const { data } = await axios.get<UsersResponse>('/api/users', {
@@ -126,9 +160,17 @@ const fetchUsers = async (params: FetchUsersParams): Promise<UsersResponse> => {
     return data;
 };
 
+// Delete users function
+const deleteUsers = async (userIds: number[]): Promise<void> => {
+    await Promise.all(userIds.map((id) => axios.delete(`/api/users/${id}`)));
+};
+
 // Skeleton loader component
 const TableRowSkeleton: React.FC = () => (
     <TableRow>
+        <TableCell>
+            <Skeleton className="h-4 w-4" />
+        </TableCell>
         <TableCell>
             <Skeleton className="size-8 rounded-full" />
         </TableCell>
@@ -149,10 +191,24 @@ const TableRowSkeleton: React.FC = () => (
         <TableCell>
             <Skeleton className="h-4 w-24" />
         </TableCell>
+        <TableCell>
+            <Skeleton className="h-8 w-8" />
+        </TableCell>
     </TableRow>
 );
 
-const UserTable: React.FC = () => {
+const UserTable: React.FC<UserTableProps> = ({
+    permissions = {
+        canView: true,
+        canEdit: true,
+        canDelete: true,
+    },
+    hiddenColumns = [],
+    onView,
+    onEdit,
+}) => {
+    const queryClient = useQueryClient();
+
     // State management
     const [pagination, setPagination] = useState({
         pageIndex: 0,
@@ -163,6 +219,15 @@ const UserTable: React.FC = () => {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [verifiedFilter, setVerifiedFilter] = useState<string>('all');
+    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(
+        {},
+    );
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+        hiddenColumns.reduce((acc, col) => ({ ...acc, [col]: false }), {}),
+    );
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [showFilters, setShowFilters] = useState(true);
 
     // Debounce search
     useEffect(() => {
@@ -195,6 +260,17 @@ const UserTable: React.FC = () => {
         staleTime: 30000,
     });
 
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: deleteUsers,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setRowSelection({});
+            setDeleteDialogOpen(false);
+            setUserToDelete(null);
+        },
+    });
+
     // Handle sorting
     const handleSort = useCallback((columnId: string) => {
         setSorting((old) => {
@@ -221,9 +297,58 @@ const UserTable: React.FC = () => {
     const hasActiveFilters =
         globalFilter !== '' || roleFilter !== 'all' || verifiedFilter !== 'all';
 
+    // Handle delete
+    const handleDelete = (userId?: number) => {
+        if (userId) {
+            setUserToDelete(userId);
+        }
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = () => {
+        const idsToDelete = userToDelete
+            ? [userToDelete]
+            : Object.keys(rowSelection)
+                  .filter((key) => rowSelection[key])
+                  .map((key) => {
+                      const rowIndex = parseInt(key);
+                      return data?.data[rowIndex]?.id;
+                  })
+                  .filter((id): id is number => id !== undefined);
+
+        if (idsToDelete.length > 0) {
+            deleteMutation.mutate(idsToDelete);
+        }
+    };
+
+    const selectedCount = Object.values(rowSelection).filter(Boolean).length;
+
     // Table columns definition
-    const columns = React.useMemo<ColumnDef<User>[]>(
+    const columns = useMemo<ColumnDef<User>[]>(
         () => [
+            {
+                id: 'select',
+                header: ({ table }) => (
+                    <Checkbox
+                        checked={table.getIsAllPageRowsSelected()}
+                        onCheckedChange={(value) =>
+                            table.toggleAllPageRowsSelected(!!value)
+                        }
+                        aria-label="Select all"
+                        disabled={!permissions.canDelete}
+                    />
+                ),
+                cell: ({ row }) => (
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(value) => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                        disabled={!permissions.canDelete}
+                    />
+                ),
+                enableSorting: false,
+                enableHiding: false,
+            },
             {
                 accessorKey: 'avatar',
                 header: 'Avatar',
@@ -353,8 +478,86 @@ const UserTable: React.FC = () => {
                     </span>
                 ),
             },
+            {
+                id: 'actions',
+                header: 'Actions',
+                cell: ({ row }) => {
+                    const user = row.original;
+                    const hasAnyPermission =
+                        permissions.canView ||
+                        permissions.canEdit ||
+                        permissions.canDelete;
+
+                    if (!hasAnyPermission) return null;
+
+                    return (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {permissions.canView && (
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            if (onView) {
+                                                onView(user);
+                                            } else {
+                                                console.log(
+                                                    'View user:',
+                                                    user.id,
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View
+                                    </DropdownMenuItem>
+                                )}
+                                {permissions.canEdit && (
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            if (onEdit) {
+                                                onEdit(user);
+                                            } else {
+                                                console.log(
+                                                    'Edit user:',
+                                                    user.id,
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                )}
+                                {permissions.canDelete && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleDelete(user.id)
+                                            }
+                                            className="text-red-600 focus:text-red-600"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    );
+                },
+                enableSorting: false,
+                enableHiding: false,
+            },
         ],
-        [handleSort],
+        [handleSort, permissions, onView, onEdit],
     );
 
     const table = useReactTable({
@@ -364,13 +567,18 @@ const UserTable: React.FC = () => {
         state: {
             pagination,
             sorting,
+            rowSelection,
+            columnVisibility,
         },
         onPaginationChange: setPagination,
         onSortingChange: setSorting,
+        onRowSelectionChange: setRowSelection,
+        onColumnVisibilityChange: setColumnVisibility,
         getCoreRowModel: getCoreRowModel(),
         manualPagination: true,
         manualSorting: true,
         manualFiltering: true,
+        enableRowSelection: true,
     });
 
     if (isError) {
@@ -390,112 +598,157 @@ const UserTable: React.FC = () => {
 
     return (
         <div className="w-full space-y-4">
-            {/* Filters Section */}
-            <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                    {/* Search Input */}
-                    <div className="relative flex-1">
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by name, email, or bio..."
-                            value={globalFilter}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-
-                    {/* Role Filter */}
-                    <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-full md:w-[180px]">
-                            <SelectValue placeholder="Filter by role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Roles</SelectItem>
-                            <SelectItem value="super-admin">
-                                Super Admin
-                            </SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="user">User</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Verification Filter */}
-                    <Select
-                        value={verifiedFilter}
-                        onValueChange={setVerifiedFilter}
+            {/* Toolbar */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFilters(!showFilters)}
                     >
-                        <SelectTrigger className="w-full md:w-[180px]">
-                            <SelectValue placeholder="Verification" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Users</SelectItem>
-                            <SelectItem value="verified">Verified</SelectItem>
-                            <SelectItem value="unverified">
-                                Unverified
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                        <Filter className="mr-2 h-4 w-4" />
+                        {showFilters ? 'Hide' : 'Show'} Filters
+                    </Button>
 
-                    {/* Per Page Selector */}
-                    <Select
-                        value={pagination.pageSize.toString()}
-                        onValueChange={(value) =>
-                            setPagination((prev) => ({
-                                ...prev,
-                                pageSize: Number(value),
-                                pageIndex: 0,
-                            }))
-                        }
-                    >
-                        <SelectTrigger className="w-full md:w-[120px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5 per page</SelectItem>
-                            <SelectItem value="10">10 per page</SelectItem>
-                            <SelectItem value="20">20 per page</SelectItem>
-                            <SelectItem value="50">50 per page</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Clear Filters Button */}
-                    {hasActiveFilters && (
+                    {selectedCount > 0 && permissions.canDelete && (
                         <Button
-                            variant="ghost"
+                            variant="destructive"
                             size="sm"
-                            onClick={clearFilters}
-                            className="w-full md:w-auto"
+                            onClick={() => handleDelete()}
                         >
-                            <X className="mr-2 h-4 w-4" />
-                            Clear
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete {selectedCount} user
+                            {selectedCount !== 1 ? 's' : ''}
                         </Button>
                     )}
                 </div>
 
-                {/* Status Bar */}
-                <div className="flex items-center justify-between border-t pt-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                        {isFetching && !isLoading && (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        )}
-                        <span className="font-medium">
-                            Total: {data?.total ?? 0} users
-                        </span>
-                    </div>
-                    {sorting.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            <Filter className="h-4 w-4" />
-                            <span>
-                                Sorted by{' '}
-                                <span className="font-medium">
-                                    {sorting[0].id}
-                                </span>{' '}
-                                {sorting[0].desc ? '↓' : '↑'}
-                            </span>
-                        </div>
-                    )}
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                            <Columns3 className="mr-2 h-4 w-4" />
+                            Columns
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {table
+                            .getAllColumns()
+                            .filter((column) => column.getCanHide())
+                            .map((column) => {
+                                return (
+                                    <DropdownMenuItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            column.toggleVisibility(
+                                                !column.getIsVisible(),
+                                            );
+                                        }}
+                                    >
+                                        <Checkbox
+                                            checked={column.getIsVisible()}
+                                            className="mr-2"
+                                        />
+                                        {column.id.replace('_', ' ')}
+                                    </DropdownMenuItem>
+                                );
+                            })}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
+
+            {/* Filters Section */}
+            {showFilters && (
+                <div className="rounded-lg border bg-card p-3 shadow-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Search Input */}
+                        <div className="relative min-w-[200px] flex-1">
+                            <Search className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search users..."
+                                value={globalFilter}
+                                onChange={(e) =>
+                                    setGlobalFilter(e.target.value)
+                                }
+                                className="h-9 pl-8 text-sm"
+                            />
+                        </div>
+
+                        {/* Role Filter */}
+                        <Select
+                            value={roleFilter}
+                            onValueChange={setRoleFilter}
+                        >
+                            <SelectTrigger className="h-9 w-[140px] text-sm">
+                                <SelectValue placeholder="Role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Roles</SelectItem>
+                                <SelectItem value="super-admin">
+                                    Super Admin
+                                </SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Verification Filter */}
+                        <Select
+                            value={verifiedFilter}
+                            onValueChange={setVerifiedFilter}
+                        >
+                            <SelectTrigger className="h-9 w-[140px] text-sm">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="verified">
+                                    Verified
+                                </SelectItem>
+                                <SelectItem value="unverified">
+                                    Unverified
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Per Page Selector */}
+                        <Select
+                            value={pagination.pageSize.toString()}
+                            onValueChange={(value) =>
+                                setPagination((prev) => ({
+                                    ...prev,
+                                    pageSize: Number(value),
+                                    pageIndex: 0,
+                                }))
+                            }
+                        >
+                            <SelectTrigger className="h-9 w-[100px] text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5</SelectItem>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Clear Filters Button */}
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearFilters}
+                                className="h-9"
+                            >
+                                <X className="mr-1 h-3.5 w-3.5" />
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Table Section */}
             <div className="rounded-lg border bg-card shadow-sm">
@@ -522,15 +775,16 @@ const UserTable: React.FC = () => {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            // Loading skeleton rows
                             Array.from({ length: pagination.pageSize }).map(
                                 (_, index) => <TableRowSkeleton key={index} />,
                             )
                         ) : table.getRowModel().rows?.length ? (
-                            // Actual data rows
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                     className="hover:bg-muted/50"
                                 >
                                     {row.getVisibleCells().map((cell) => (
@@ -544,7 +798,6 @@ const UserTable: React.FC = () => {
                                 </TableRow>
                             ))
                         ) : (
-                            // No results
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
@@ -567,7 +820,7 @@ const UserTable: React.FC = () => {
             </div>
 
             {/* Pagination Section */}
-            <div className="flex flex-col items-center justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm md:flex-row">
+            <div className="flex items-center justify-between rounded-lg border bg-card p-3 shadow-sm">
                 <div className="text-sm text-muted-foreground">
                     Showing{' '}
                     <span className="font-medium text-foreground">
@@ -584,10 +837,11 @@ const UserTable: React.FC = () => {
                     results
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
@@ -596,17 +850,18 @@ const UserTable: React.FC = () => {
                     <Button
                         variant="outline"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
 
-                    <div className="flex items-center gap-1 text-sm">
+                    <div className="flex items-center gap-1 px-3 text-sm">
                         <span className="font-medium">
-                            Page {pagination.pageIndex + 1}
+                            {pagination.pageIndex + 1}
                         </span>
-                        <span className="text-muted-foreground">of</span>
+                        <span className="text-muted-foreground">/</span>
                         <span className="font-medium">
                             {data?.last_page ?? 1}
                         </span>
@@ -615,6 +870,7 @@ const UserTable: React.FC = () => {
                     <Button
                         variant="outline"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
@@ -623,6 +879,7 @@ const UserTable: React.FC = () => {
                     <Button
                         variant="outline"
                         size="icon"
+                        className="h-8 w-8"
                         onClick={() =>
                             table.setPageIndex(table.getPageCount() - 1)
                         }
@@ -632,6 +889,42 @@ const UserTable: React.FC = () => {
                     </Button>
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Deletion</DialogTitle>
+                        <DialogDescription>
+                            {userToDelete
+                                ? 'Are you sure you want to delete this user? This action cannot be undone.'
+                                : `Are you sure you want to delete ${selectedCount} user${
+                                      selectedCount !== 1 ? 's' : ''
+                                  }? This action cannot be undone.`}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setDeleteDialogOpen(false);
+                                setUserToDelete(null);
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmDelete}
+                            disabled={deleteMutation.isPending}
+                        >
+                            {deleteMutation.isPending
+                                ? 'Deleting...'
+                                : 'Delete'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
