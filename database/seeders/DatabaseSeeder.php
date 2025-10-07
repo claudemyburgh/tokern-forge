@@ -29,6 +29,6 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
         ]);
 
-        User::factory(10)->create();
+        User::factory(2110)->create();
     }
 }

@@ -9,14 +9,16 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.3|^8.4",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
+        "spatie/eloquent-sortable": "^4.5",
         "spatie/laravel-medialibrary": "^11.15",
-        "spatie/laravel-permission": "^6.21"
+        "spatie/laravel-permission": "^6.21",
+        "spatie/laravel-tags": "^4.10"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
