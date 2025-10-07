@@ -5,7 +5,16 @@ import '../css/app.css';
 import './bootstrap';
 import { initializeTheme } from './hooks/use-appearance';
 
+import { configureEcho } from '@laravel/echo-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+configureEcho({
+    broadcaster: 'reverb',
+});
+
+configureEcho({
+    broadcaster: 'reverb',
+});
 
 const queryClient = new QueryClient();
 
@@ -28,7 +37,7 @@ createInertiaApp({
         );
     },
     progress: {
-        color: '#4B5563',
+        color: '#f59e0b',
     },
 });
 

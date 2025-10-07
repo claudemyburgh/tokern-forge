@@ -15,7 +15,7 @@ class HomePageIndexController extends Controller
     public function __invoke(Request $request): Response
     {
         return Inertia::render('home', [
-            'users' => User::paginate()
+            'users' => User::paginate(),
         ]);
     }
 }

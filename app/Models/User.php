@@ -6,7 +6,6 @@ namespace App\Models;
 use App\Observers\UserObserver;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,12 +18,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 
-
 #[ObservedBy(UserObserver::class)]
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, InteractsWithMedia, SoftDeletes, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, InteractsWithMedia, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -50,7 +48,6 @@ class User extends Authenticatable implements HasMedia
         'remember_token',
     ];
 
-
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('super-admin');
@@ -60,8 +57,6 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->isSuperAdmin();
     }
-
-
 
     public function getInitialsAttribute(): string
     {
@@ -74,7 +69,7 @@ class User extends Authenticatable implements HasMedia
             return $this->getFirstMediaUrl('avatar', '320x320');
         }
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&size=320';
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=random&size=320';
     }
 
     public function getAvatarSmallAttribute(): string
@@ -94,7 +89,7 @@ class User extends Authenticatable implements HasMedia
         // Extract size from conversion name (e.g., '80x80' -> '80')
         $size = explode('x', $conversion)[0];
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&size=' . $size;
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=random&size='.$size;
     }
 
     public function registerMediaCollections(): void
@@ -129,7 +124,6 @@ class User extends Authenticatable implements HasMedia
             ->optimize()
             ->nonQueued();
     }
-
 
     /**
      * Get the attributes that should be cast.

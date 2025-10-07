@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -25,7 +24,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-
         // Define Super Admin gate that bypasses all permission checks
         Gate::before(function ($user, $ability) {
             if ($user->hasRole('super admin')) {
@@ -47,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
             $firstInitial = substr($names[0], 0, 1);
             $lastInitial = substr(end($names), 0, 1);
 
-            return strtoupper($firstInitial . $lastInitial);
+            return strtoupper($firstInitial.$lastInitial);
         });
 
     }

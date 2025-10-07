@@ -11,9 +11,6 @@ class UserController extends Controller
 {
     /**
      * Display a paginated listing of users with filters and sorting.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -42,7 +39,7 @@ class UserController extends Controller
             ->withTrashed(); // Include soft deleted if needed, remove if not
 
         // Apply search filter
-        if (!empty($search)) {
+        if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -115,9 +112,6 @@ class UserController extends Controller
 
     /**
      * Display the specified user.
-     *
-     * @param User $user
-     * @return JsonResponse
      */
     public function show(User $user): JsonResponse
     {
@@ -130,16 +124,12 @@ class UserController extends Controller
 
     /**
      * Update the specified user.
-     *
-     * @param Request $request
-     * @param User $user
-     * @return JsonResponse
      */
     public function update(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
             'bio' => 'nullable|string|max:1000',
         ]);
 
@@ -151,12 +141,8 @@ class UserController extends Controller
         ]);
     }
 
-
     /**
      * Remove the specified user.
-     *
-     * @param User $user
-     * @return JsonResponse
      */
     public function destroy(User $user): JsonResponse
     {
@@ -169,8 +155,6 @@ class UserController extends Controller
 
     /**
      * Get statistics for the users.
-     *
-     * @return JsonResponse
      */
     public function stats(): JsonResponse
     {
@@ -190,9 +174,6 @@ class UserController extends Controller
 
     /**
      * Export users data.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function export(Request $request): JsonResponse
     {

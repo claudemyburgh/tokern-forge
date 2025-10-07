@@ -21,7 +21,7 @@ class CheckPermissionWithSuperAdmin
         }
 
         // Regular permission check
-        if (!auth()->user()?->can($permission)) {
+        if (! auth()->user()?->can($permission)) {
             abort(403, 'Unauthorized action.');
         }
 
