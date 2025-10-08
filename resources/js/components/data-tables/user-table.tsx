@@ -251,7 +251,7 @@ const UserTable: React.FC<UserTableProps> = ({
     };
 
     // React Query for data fetching
-    const { data, isLoading, isError, error, isFetching } = useQuery<
+    const { data, isLoading, isError, error } = useQuery<
         UsersResponse,
         AxiosError
     >({
