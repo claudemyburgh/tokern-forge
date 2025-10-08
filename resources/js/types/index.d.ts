@@ -31,6 +31,18 @@ export interface SharedData {
     [key: string]: unknown;
 }
 
+export interface Media {
+    id: number;
+    uuid: string;
+    collection_name: string;
+    name: string;
+    file_name: string;
+    mime_type: string;
+    size: number;
+    original_url: string;
+    preview_url: string;
+}
+
 export interface Role {
     id: number;
     name: string;
@@ -51,16 +63,19 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    bio?: string
-    avatar?: string;
+    bio: string | null;
     email_verified_at: string | null;
-    two_factor_enabled?: boolean;
-    roles?: string[];
-    initials: string;
-    permissions?: string[];
-    is_super_admin?: boolean;
+    deleted_at: string | null;
     created_at: string;
     updated_at: string;
+    avatar: string;
+    avatar_small: string;
+    initials: string;
+    is_super_admin: boolean;
+    media: Media[];
+    roles: Role[];
+    two_factor_enabled?: boolean;
+    permissions?: string[];
     [key: string]: unknown;
 }
 
