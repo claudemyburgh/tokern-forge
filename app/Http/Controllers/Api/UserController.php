@@ -105,9 +105,30 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8',
+            'roles' => 'sometimes|array',
+            'roles.*' => 'sometimes|string|exists:roles,name',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        if (isset($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+        }
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'data' => $user->load(['roles', 'media']),
+        ], 201);
     }
 
     /**
@@ -131,9 +152,15 @@ class UserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
             'bio' => 'nullable|string|max:1000',
+            'roles' => 'sometimes|array',
+            'roles.*' => 'sometimes|string|exists:roles,name',
         ]);
 
         $user->update($validated);
+
+        if (isset($validated['roles'])) {
+            $user->syncRoles($validated['roles']);
+        }
 
         return response()->json([
             'message' => 'User updated successfully',

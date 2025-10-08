@@ -60,68 +60,13 @@ import {
     Trash2,
     X,
 } from 'lucide-react';
+import { PaginatedResponse, Role, User } from '@/types';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import UserFormModal from './user-form-modal';
+import { PlusCircle } from 'lucide-react';
 
 // Types
-interface Media {
-    id: number;
-    uuid: string;
-    collection_name: string;
-    name: string;
-    file_name: string;
-    mime_type: string;
-    size: number;
-    original_url: string;
-    preview_url: string;
-}
-
-interface Role {
-    id: number;
-    name: string;
-    guard_name: string;
-    created_at: string;
-    updated_at: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    bio: string | null;
-    email_verified_at: string | null;
-    deleted_at: string | null;
-    created_at: string;
-    updated_at: string;
-    avatar: string;
-    avatar_small: string;
-    initials: string;
-    is_super_admin: boolean;
-    media: Media[];
-    roles: Role[];
-}
-
-interface PaginationLink {
-    url: string | null;
-    label: string;
-    page: number | null;
-    active: boolean;
-}
-
-interface UsersResponse {
-    current_page: number;
-    data: User[];
-    first_page_url: string;
-    from: number;
-    last_page: number;
-    last_page_url: string;
-    links: PaginationLink[];
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    to: number;
-    total: number;
-}
+type UsersResponse = PaginatedResponse<User>;
 
 interface FetchUsersParams {
     page: number;
@@ -141,10 +86,9 @@ interface UserTableProps {
     };
     hiddenColumns?: string[];
     onView?: (user: User) => void;
-    onEdit?: (user: User) => void;
 }
 
-// Fetch users function
+// API functions
 const fetchUsers = async (params: FetchUsersParams): Promise<UsersResponse> => {
     const { data } = await axios.get<UsersResponse>('/api/users', {
         params: {
@@ -160,9 +104,23 @@ const fetchUsers = async (params: FetchUsersParams): Promise<UsersResponse> => {
     return data;
 };
 
-// Delete users function
 const deleteUsers = async (userIds: number[]): Promise<void> => {
     await Promise.all(userIds.map((id) => axios.delete(`/api/users/${id}`)));
+};
+
+const createUser = async (userData: Partial<User>): Promise<User> => {
+    const { data } = await axios.post('/api/users', userData);
+    return data.data;
+};
+
+const updateUser = async ({ id, ...userData }: Partial<User> & { id: number }): Promise<User> => {
+    const { data } = await axios.put(`/api/users/${id}`, userData);
+    return data.data;
+};
+
+const fetchRoles = async (): Promise<Role[]> => {
+    const { data } = await axios.get<Role[]>('/api/roles');
+    return data;
 };
 
 // Skeleton loader component
@@ -205,11 +163,12 @@ const UserTable: React.FC<UserTableProps> = ({
     },
     hiddenColumns = [],
     onView,
-    onEdit,
 }) => {
     const queryClient = useQueryClient();
 
     // State management
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize: 10,
@@ -228,6 +187,11 @@ const UserTable: React.FC<UserTableProps> = ({
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [showFilters, setShowFilters] = useState(true);
+
+    const onEdit = useCallback((user: User) => {
+        setEditingUser(user);
+        setIsModalOpen(true);
+    }, []);
 
     // Debounce search
     useEffect(() => {
@@ -251,7 +215,8 @@ const UserTable: React.FC<UserTableProps> = ({
     };
 
     // React Query for data fetching
-    const { data, isLoading, isError, error, isFetching } = useQuery<
+    // React Query for data fetching
+    const { data, isLoading, isError, error } = useQuery<
         UsersResponse,
         AxiosError
     >({
@@ -260,7 +225,31 @@ const UserTable: React.FC<UserTableProps> = ({
         staleTime: 30000,
     });
 
-    // Delete mutation
+    const { data: roles = [] } = useQuery<Role[], AxiosError>({
+        queryKey: ['roles'],
+        queryFn: fetchRoles,
+        staleTime: Infinity, // Roles are unlikely to change frequently
+    });
+
+    // Mutations
+    const mutationConfig = {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            setIsModalOpen(false);
+            setEditingUser(null);
+        },
+    };
+
+    const createMutation = useMutation({
+        mutationFn: createUser,
+        ...mutationConfig,
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: updateUser,
+        ...mutationConfig,
+    });
+
     const deleteMutation = useMutation({
         mutationFn: deleteUsers,
         onSuccess: () => {
@@ -270,6 +259,14 @@ const UserTable: React.FC<UserTableProps> = ({
             setUserToDelete(null);
         },
     });
+
+    const handleFormSubmit = (formData: Partial<User>) => {
+        if (editingUser) {
+            updateMutation.mutate({ ...formData, id: editingUser.id });
+        } else {
+            createMutation.mutate(formData);
+        }
+    };
 
     // Handle sorting
     const handleSort = useCallback((columnId: string) => {
@@ -519,18 +516,7 @@ const UserTable: React.FC<UserTableProps> = ({
                                     </DropdownMenuItem>
                                 )}
                                 {permissions.canEdit && (
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            if (onEdit) {
-                                                onEdit(user);
-                                            } else {
-                                                console.log(
-                                                    'Edit user:',
-                                                    user.id,
-                                                );
-                                            }
-                                        }}
-                                    >
+                                    <DropdownMenuItem onClick={() => onEdit(user)}>
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
@@ -608,6 +594,17 @@ const UserTable: React.FC<UserTableProps> = ({
                     >
                         <Filter className="mr-2 h-4 w-4" />
                         {showFilters ? 'Hide' : 'Show'} Filters
+                    </Button>
+
+                    <Button
+                        size="sm"
+                        onClick={() => {
+                            setEditingUser(null);
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create User
                     </Button>
 
                     {selectedCount > 0 && permissions.canDelete && (
@@ -889,6 +886,19 @@ const UserTable: React.FC<UserTableProps> = ({
                     </Button>
                 </div>
             </div>
+
+            {/* User Form Modal */}
+            <UserFormModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setEditingUser(null);
+                }}
+                onSubmit={handleFormSubmit}
+                user={editingUser}
+                roles={roles}
+                isLoading={createMutation.isPending || updateMutation.isPending}
+            />
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

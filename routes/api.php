@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,9 +13,9 @@ Route::get('/user', function (Request $request) {
 Route::group([
     'middleware' => 'auth:sanctum',
 ], function () {
-    // TODO
+    Route::apiResource('/users', UserController::class);
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    // Additional user routes
+    Route::get('users/stats', [UserController::class, 'stats'])->name('users.stats');
+    Route::get('users/export', [UserController::class, 'export'])->name('users.export');
 });
-Route::apiResource('/users', UserController::class);
-// Additional user routes
-Route::get('users/stats', [UserController::class, 'stats'])->name('users.stats');
-Route::get('users/export', [UserController::class, 'export'])->name('users.export');
