@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/usr/bin/php8.4",
+            "args": [
+                "/home/vagrant/code/laravel-web3/token-forge/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
