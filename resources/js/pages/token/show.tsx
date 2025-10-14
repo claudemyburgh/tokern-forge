@@ -1,5 +1,7 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -7,10 +9,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
@@ -23,7 +23,6 @@ import {
     Settings,
     Share2,
 } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
 
 interface Token {
     id: number;
@@ -63,7 +62,7 @@ interface PageProps {
 }
 
 export default function TokenShow() {
-    const { token } = usePage().props as PageProps;
+    const { token } = usePage<PageProps>().props;
 
     const formatSupply = (value: number) => {
         return new Intl.NumberFormat('en-US').format(value);
@@ -137,39 +136,44 @@ export default function TokenShow() {
                 <div className="mb-8">
                     <Link
                         href="/dashboard"
-                        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+                        className="mb-4 inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Dashboard
                     </Link>
 
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                         {/* Token Image and Basic Info */}
-                        <div className="flex flex-col sm:flex-row items-start gap-6">
+                        <div className="flex flex-col items-start gap-6 sm:flex-row">
                             {getTokenImage('preview') && (
                                 <div className="relative">
                                     <img
                                         src={getTokenImage('preview')}
                                         alt={token.name}
-                                        className="w-32 h-32 rounded-xl border-2 border-border object-cover shadow-lg"
+                                        className="h-32 w-32 rounded-xl border-2 border-border object-cover shadow-lg"
                                     />
                                 </div>
                             )}
 
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
-                                    <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                                    <h1 className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-4xl font-bold">
                                         {token.name}
                                     </h1>
-                                    <Badge className={getStatusColor(token.status)}>
-                                        {token.status.charAt(0).toUpperCase() + token.status.slice(1)}
+                                    <Badge
+                                        className={getStatusColor(token.status)}
+                                    >
+                                        {token.status.charAt(0).toUpperCase() +
+                                            token.status.slice(1)}
                                     </Badge>
                                 </div>
 
                                 <div className="flex items-center gap-4 text-muted-foreground">
                                     <div className="flex items-center gap-1">
                                         <Hash className="h-4 w-4" />
-                                        <span className="font-mono">{token.symbol}</span>
+                                        <span className="font-mono">
+                                            {token.symbol}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Coins className="h-4 w-4" />
@@ -177,7 +181,9 @@ export default function TokenShow() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <Calendar className="h-4 w-4" />
-                                        <span>{formatDate(token.created_at)}</span>
+                                        <span>
+                                            {formatDate(token.created_at)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -186,25 +192,23 @@ export default function TokenShow() {
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-3">
                             <Button variant="outline" size="sm">
-                                <Share2 className="h-4 w-4 mr-2" />
+                                <Share2 className="mr-2 h-4 w-4" />
                                 Share
                             </Button>
                             <Button variant="outline" size="sm">
-                                <Settings className="h-4 w-4 mr-2" />
+                                <Settings className="mr-2 h-4 w-4" />
                                 Edit
                             </Button>
                             {token.status === 'draft' && (
-                                <Button size="sm">
-                                    Deploy to Blockchain
-                                </Button>
+                                <Button size="sm">Deploy to Blockchain</Button>
                             )}
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="space-y-6 lg:col-span-2">
                         {/* Token Details */}
                         <Card>
                             <CardHeader>
@@ -214,7 +218,7 @@ export default function TokenShow() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
@@ -238,8 +242,12 @@ export default function TokenShow() {
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Mint Authority
                                             </label>
-                                            <p className={`text-lg font-semibold ${token.is_mint_revoked ? 'text-red-600' : 'text-green-600'}`}>
-                                                {token.is_mint_revoked ? 'Revoked' : 'Active'}
+                                            <p
+                                                className={`text-lg font-semibold ${token.is_mint_revoked ? 'text-red-600' : 'text-green-600'}`}
+                                            >
+                                                {token.is_mint_revoked
+                                                    ? 'Revoked'
+                                                    : 'Active'}
                                             </p>
                                         </div>
                                     </div>
@@ -249,8 +257,12 @@ export default function TokenShow() {
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Freeze Authority
                                             </label>
-                                            <p className={`text-lg font-semibold ${token.is_frozen ? 'text-red-600' : 'text-green-600'}`}>
-                                                {token.is_frozen ? 'Active' : 'Revoked'}
+                                            <p
+                                                className={`text-lg font-semibold ${token.is_frozen ? 'text-red-600' : 'text-green-600'}`}
+                                            >
+                                                {token.is_frozen
+                                                    ? 'Active'
+                                                    : 'Revoked'}
                                             </p>
                                         </div>
 
@@ -259,7 +271,7 @@ export default function TokenShow() {
                                                 <label className="text-sm font-medium text-muted-foreground">
                                                     Creator Wallet
                                                 </label>
-                                                <p className="text-sm font-mono break-all">
+                                                <p className="font-mono text-sm break-all">
                                                     {token.wallet_address}
                                                 </p>
                                             </div>
@@ -270,7 +282,7 @@ export default function TokenShow() {
                                 <Separator />
 
                                 <div>
-                                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                                         Description
                                     </label>
                                     <p className="text-sm leading-relaxed">
@@ -290,23 +302,25 @@ export default function TokenShow() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         {socialLinks.map((link) => (
                                             <a
                                                 key={link.key}
                                                 href={link.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                                                className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
                                             >
                                                 <link.icon className="h-5 w-5 text-muted-foreground" />
                                                 <div>
-                                                    <p className="font-medium">{link.label}</p>
-                                                    <p className="text-sm text-muted-foreground truncate">
+                                                    <p className="font-medium">
+                                                        {link.label}
+                                                    </p>
+                                                    <p className="truncate text-sm text-muted-foreground">
                                                         {link.url}
                                                     </p>
                                                 </div>
-                                                <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
+                                                <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground" />
                                             </a>
                                         ))}
                                     </div>
@@ -320,25 +334,35 @@ export default function TokenShow() {
                         {/* Quick Stats */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-lg">Quick Stats</CardTitle>
+                                <CardTitle className="text-lg">
+                                    Quick Stats
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-muted-foreground">Status</span>
-                                    <Badge className={getStatusColor(token.status)}>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                        Status
+                                    </span>
+                                    <Badge
+                                        className={getStatusColor(token.status)}
+                                    >
                                         {token.status}
                                     </Badge>
                                 </div>
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-muted-foreground">Created</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                        Created
+                                    </span>
                                     <span className="text-sm font-medium">
                                         {formatDate(token.created_at)}
                                     </span>
                                 </div>
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-muted-foreground">Network</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                        Network
+                                    </span>
                                     <span className="text-sm font-medium capitalize">
                                         {token.network}
                                     </span>
@@ -350,7 +374,9 @@ export default function TokenShow() {
                         {token.media?.[0] && (
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className="text-lg">Token Images</CardTitle>
+                                    <CardTitle className="text-lg">
+                                        Token Images
+                                    </CardTitle>
                                     <CardDescription>
                                         Different sizes for various uses
                                     </CardDescription>
@@ -358,16 +384,32 @@ export default function TokenShow() {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         {[
-                                            { name: 'Blockchain (64x64)', conversion: 'blockchain' },
-                                            { name: 'Icon (160x160)', conversion: 'icon-160' },
-                                            { name: 'Preview (512x512)', conversion: 'preview' },
+                                            {
+                                                name: 'Blockchain (64x64)',
+                                                conversion: 'blockchain',
+                                            },
+                                            {
+                                                name: 'Icon (160x160)',
+                                                conversion: 'icon-160',
+                                            },
+                                            {
+                                                name: 'Preview (512x512)',
+                                                conversion: 'preview',
+                                            },
                                         ].map(({ name, conversion }) => (
-                                            <div key={conversion} className="space-y-2">
-                                                <p className="text-xs text-muted-foreground">{name}</p>
+                                            <div
+                                                key={conversion}
+                                                className="space-y-2"
+                                            >
+                                                <p className="text-xs text-muted-foreground">
+                                                    {name}
+                                                </p>
                                                 <img
-                                                    src={getTokenImage(conversion)}
+                                                    src={getTokenImage(
+                                                        conversion,
+                                                    )}
                                                     alt={`${token.name} ${name}`}
-                                                    className="w-full aspect-square rounded border border-border object-cover"
+                                                    className="aspect-square w-full rounded border border-border object-cover"
                                                 />
                                             </div>
                                         ))}
