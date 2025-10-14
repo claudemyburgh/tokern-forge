@@ -31,6 +31,20 @@ class User extends Authenticatable  implements HasMedia
         'bio',
         'provider',
         'provider_id',
+        'symbol',
+        'decimal',
+        'supply',
+        'description',
+        'website',
+        'twitter_url',
+        'telegram_url',
+        'discord_url',
+        'reddit_url',
+        'wallet_address',
+        'is_frozen',
+        'is_mint_revoked',
+        'status',
+        'network',
     ];
 
     /**
