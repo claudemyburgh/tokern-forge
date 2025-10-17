@@ -16,12 +16,17 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::firstOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'claude@designbycode.co.za'],
             [
-                'name' => 'Test User',
+                'name' => 'Claude Myburgh',
                 'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
+
+        $this->call([
+            TokenSeeder::class,
+        ]);
+
     }
 }

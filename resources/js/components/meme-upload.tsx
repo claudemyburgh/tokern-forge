@@ -30,7 +30,11 @@ const ImagePreview = ({
     </div>
 );
 
-export default function MemeUpload({ onFileChange }: { onFileChange?: (file: File | null) => void }) {
+export default function MemeUpload({
+    onFileChange,
+}: {
+    onFileChange?: (file: File | null) => void;
+}) {
     const [memePicture, setMemePicture] = useState<string | null>(null);
 
     return (

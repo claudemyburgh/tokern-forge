@@ -62,5 +62,4 @@ Route::middleware('auth')->group(function () {
     Route::post('settings/avatar', [AvatarController::class, 'update'])->name('avatar.update');
     Route::delete('settings/avatar', [AvatarController::class, 'destroy'])->name('avatar.destroy');
 
-    Route::resource('tokens', TokenController::class);
 });

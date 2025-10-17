@@ -15,7 +15,7 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="my-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="max-w-2xl p-4">
                 <TokenForm />
             </div>
         </AppLayout>

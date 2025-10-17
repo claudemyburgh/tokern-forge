@@ -2,8 +2,15 @@ import * as React from 'react';
 
 // import { SearchForm } from "@/components/search-form";
 // import { TeamSwitcher } from "@/components/team-switcher";
+import TokenCreateController from '@/actions/App/Http/Controllers/Token/TokenCreateController';
+import TokenIndexController from '@/actions/App/Http/Controllers/Token/TokenIndexController';
 import AppLogo from '@/components/app-logo';
 import { NavUser } from '@/components/nav-user';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Sidebar,
     SidebarContent,
@@ -15,11 +22,15 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarRail,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { Link, usePage } from '@inertiajs/react';
 import {
+    RiArrowRightSLine,
     RiCodeSSlashLine,
     RiCoinLine,
     RiLeafLine,
@@ -42,8 +53,20 @@ const data = {
                 },
                 {
                     title: 'Tokens',
-                    url: '#',
+                    url: TokenIndexController().url,
                     icon: RiCoinLine,
+                    children: [
+                        {
+                            title: 'List Tokens',
+                            url: TokenIndexController().url,
+                            icon: RiCoinLine,
+                        },
+                        {
+                            title: 'Create Tokens',
+                            url: TokenCreateController().url,
+                            icon: RiCoinLine,
+                        },
+                    ],
                 },
                 {
                     title: 'Tools',
@@ -109,30 +132,118 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarGroupLabel>
                         <SidebarGroupContent className="px-2">
                             <SidebarMenu>
-                                {item.items.map((item) => (
-                                    <SidebarMenuItem key={item.title}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
-                                            isActive={page.url.startsWith(
-                                                typeof item.url === 'string'
-                                                    ? item.url
-                                                    : item.url,
-                                            )}
-                                        >
-                                            <Link href={item.url}>
-                                                {item.icon && (
-                                                    <item.icon
-                                                        className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"
-                                                        size={22}
-                                                        aria-hidden="true"
-                                                    />
-                                                )}
-                                                <span>{item.title}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
+                                {item.items.map((item) => {
+                                    const hasChildren =
+                                        item.children &&
+                                        item.children.length > 0;
+                                    const isActive = page.url.startsWith(
+                                        typeof item.url === 'string'
+                                            ? item.url
+                                            : item.url,
+                                    );
+
+                                    // If item has children, render as collapsible
+                                    if (hasChildren) {
+                                        return (
+                                            <Collapsible
+                                                key={item.title}
+                                                asChild
+                                                defaultOpen={isActive}
+                                                className="group/collapsible"
+                                            >
+                                                <SidebarMenuItem>
+                                                    <CollapsibleTrigger asChild>
+                                                        <SidebarMenuButton
+                                                            className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
+                                                            isActive={isActive}
+                                                        >
+                                                            {item.icon && (
+                                                                <item.icon
+                                                                    className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"
+                                                                    size={22}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            )}
+                                                            <span>
+                                                                {item.title}
+                                                            </span>
+                                                            <RiArrowRightSLine
+                                                                className="ml-auto text-muted-foreground/60 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                                                                size={18}
+                                                            />
+                                                        </SidebarMenuButton>
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent>
+                                                        <SidebarMenuSub>
+                                                            {item.children?.map(
+                                                                (subItem) => {
+                                                                    const isSubItemActive =
+                                                                        page.url.startsWith(
+                                                                            typeof subItem.url ===
+                                                                                'string'
+                                                                                ? subItem.url
+                                                                                : subItem.url,
+                                                                        );
+                                                                    return (
+                                                                        <SidebarMenuSubItem
+                                                                            key={
+                                                                                subItem.title
+                                                                            }
+                                                                        >
+                                                                            <SidebarMenuSubButton
+                                                                                asChild
+                                                                                className={`opacity-50 hover:bg-transparent hover:opacity-100`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={
+                                                                                        subItem.url
+                                                                                    }
+                                                                                    className={
+                                                                                        isSubItemActive
+                                                                                            ? 'text-primary'
+                                                                                            : ''
+                                                                                    }
+                                                                                >
+                                                                                    <span>
+                                                                                        {
+                                                                                            subItem.title
+                                                                                        }
+                                                                                    </span>
+                                                                                </Link>
+                                                                            </SidebarMenuSubButton>
+                                                                        </SidebarMenuSubItem>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </SidebarMenuSub>
+                                                    </CollapsibleContent>
+                                                </SidebarMenuItem>
+                                            </Collapsible>
+                                        );
+                                    }
+
+                                    // If no children, render as regular menu item
+                                    return (
+                                        <SidebarMenuItem key={item.title}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
+                                                isActive={isActive}
+                                            >
+                                                <Link href={item.url}>
+                                                    {item.icon && (
+                                                        <item.icon
+                                                            className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"
+                                                            size={22}
+                                                            aria-hidden="true"
+                                                        />
+                                                    )}
+                                                    <span>{item.title}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>

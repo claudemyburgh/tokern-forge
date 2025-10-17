@@ -2,10 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\Token;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Token>
+ * @extends Factory<Token>
  */
 class TokenFactory extends Factory
 {
@@ -17,7 +20,12 @@ class TokenFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' =>User::factory()->create(),
+            'name' => $this->faker->name(),
+            'symbol' => Str::upper(substr($this->faker->name(), 0, 3)),
+            'description' => $this->faker->text(),
+            'decimals' => 9,
+            'supply' => 1000000000
         ];
     }
 }
