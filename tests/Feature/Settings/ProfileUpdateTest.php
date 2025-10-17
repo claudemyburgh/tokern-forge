@@ -64,6 +64,7 @@ test('user can delete their account', function () {
         ->assertRedirect(route('home'));
 
     $this->assertGuest();
+    // User should be completely removed from database (not just soft deleted)
     expect($user->fresh())->toBeNull();
 });
 
