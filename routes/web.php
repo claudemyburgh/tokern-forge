@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Token\TokenCreateController;
 use App\Http\Controllers\Token\TokenIndexController;
+use App\Http\Controllers\Token\TokenStoreController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::get('tokens', TokenIndexController::class)->name('tokens.index');
 Route::get('tokens/create', TokenCreateController::class)->name('tokens.create');
+Route::post('tokens', TokenStoreController::class)->name('tokens.store');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
