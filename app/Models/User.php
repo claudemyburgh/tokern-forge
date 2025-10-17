@@ -13,11 +13,12 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable  implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, SoftDeletes, InteractsWithMedia;
+    use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, SoftDeletes, InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -31,20 +32,6 @@ class User extends Authenticatable  implements HasMedia
         'bio',
         'provider',
         'provider_id',
-        'symbol',
-        'decimal',
-        'supply',
-        'description',
-        'website',
-        'twitter_url',
-        'telegram_url',
-        'discord_url',
-        'reddit_url',
-        'wallet_address',
-        'is_frozen',
-        'is_mint_revoked',
-        'status',
-        'network',
     ];
 
     /**
@@ -59,7 +46,18 @@ class User extends Authenticatable  implements HasMedia
         'remember_token',
     ];
 
-    protected $appends = ['avatar', 'avatar_small'];
+    protected $appends = ['avatar', 'avatar_small', 'is_super_admin'];
+
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super-admin');
+    }
+
+    public function GetIsSuperAdminAttribute(): bool
+    {
+        return $this->isSuperAdmin();
+    }
 
     public function getAvatarAttribute(): string
     {

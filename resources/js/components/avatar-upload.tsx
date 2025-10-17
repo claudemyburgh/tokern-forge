@@ -22,11 +22,11 @@ interface AvatarUploadProps {
 }
 
 const ImagePreview = ({
-    url,
-    onCameraClick,
-    onDrop,
-    isUploading = false,
-}: {
+                          url,
+                          onCameraClick,
+                          onDrop,
+                          isUploading = false,
+                      }: {
     url: string;
     onRemove: () => void;
     isUploaded?: boolean;
@@ -50,12 +50,12 @@ const ImagePreview = ({
         noClick={true}
     >
         {({
-            getRootProps,
-            getInputProps,
-            isDragActive,
-            isDragAccept,
-            isDragReject,
-        }) => (
+              getRootProps,
+              getInputProps,
+              isDragActive,
+              isDragAccept,
+              isDragReject,
+          }) => (
             <div
                 {...getRootProps()}
                 className={cn(
@@ -253,12 +253,12 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
                                 disabled={isUploading}
                             >
                                 {({
-                                    getRootProps,
-                                    getInputProps,
-                                    isDragActive,
-                                    isDragAccept,
-                                    isDragReject,
-                                }) => (
+                                      getRootProps,
+                                      getInputProps,
+                                      isDragActive,
+                                      isDragAccept,
+                                      isDragReject,
+                                  }) => (
                                     <div
                                         {...getRootProps()}
                                         className={cn(
@@ -271,7 +271,7 @@ export default function AvatarUpload({ user, errors }: AvatarUploadProps) {
                                                     isDragActive &&
                                                     isDragReject,
                                                 'cursor-not-allowed opacity-50':
-                                                    isUploading,
+                                                isUploading,
                                             },
                                         )}
                                     >

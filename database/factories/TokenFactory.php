@@ -20,7 +20,7 @@ class TokenFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' =>User::factory()->create(),
+            'user_id' => User::factory(), // This will create a new user for each token
             'name' => $this->faker->name(),
             'symbol' => Str::upper(substr($this->faker->name(), 0, 3)),
             'description' => $this->faker->text(),
