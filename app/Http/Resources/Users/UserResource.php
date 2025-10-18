@@ -7,8 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-
-
     /**
      * Transform the resource into an array.
      *
@@ -24,9 +22,11 @@ class UserResource extends JsonResource
             'avatar' => $this->avatar,
             'avatar_small' => $this->avatar_small,
             'is_super_admin' => $this->isSuperAdmin(),
-            'roles' => $request->user()->roles->pluck('name')->toArray(),
+            'roles' => $this->roles->map->only(['id', 'name']),
             'permissions' => $this->getAllPermissions()->pluck('name'),
-//            'permissions' => $request->user()->permissions->pluck('name')->toArray(),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
         ];
     }
 }

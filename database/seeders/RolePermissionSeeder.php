@@ -21,6 +21,8 @@ class RolePermissionSeeder extends Seeder
             'edit tokens',
             'delete tokens',
             'manage users',
+            'manage roles',
+            'manage permissions',
             'manage settings',
         ];
 
@@ -31,9 +33,17 @@ class RolePermissionSeeder extends Seeder
         // Create roles
         $roles = [
             'super-admin' => $permissions, // Gets all permissions
-            'admin' => ['view tokens', 'create tokens', 'edit tokens', 'delete tokens', 'manage users'],
+            'admin' => [
+                'view tokens', 
+                'create tokens', 
+                'edit tokens', 
+                'delete tokens', 
+                'manage users',
+                'manage roles',
+                'manage permissions'
+            ],
             'pro' => ['view tokens', 'create tokens', 'edit tokens', 'manage settings'],
-            'free' => ['view tokens', 'manage settings', 'manage users'],
+            'free' => ['view tokens', 'manage settings'],
         ];
 
         foreach ($roles as $roleName => $rolePermissions) {
