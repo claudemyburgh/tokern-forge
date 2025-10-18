@@ -1,4 +1,6 @@
-import users from '@/routes/admin/users';
+import { EnhancedFilamentTable } from '@/components/enhanced-filament-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,22 +9,14 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useInitials } from '@/hooks/use-initials';
+import { useTableState } from '@/hooks/use-table-state';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { RiAddLine, RiMoreFill } from '@remixicon/react';
-import { DataTable } from '@/components/data-table';
-import {
-    type ColumnDef,
-} from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import users from '@/routes/admin/users';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { RiAddLine } from '@remixicon/react';
+import { type ColumnDef } from '@tanstack/react-table';
 
 interface Role {
     id: number;
@@ -37,23 +31,28 @@ interface User {
     created_at: string;
     updated_at: string;
     deleted_at?: string | null;
+    avatar?: string;
+    avatar_small?: string;
 }
 
 interface UsersPageProps {
-    users: {
-        data: User[];
-        links: any[];
-        meta: {
-            current_page: number;
-            last_page: number;
-            from: number;
-            to: number;
-            total: number;
-            per_page: number;
-        };
-    } | undefined;
+    users:
+        | {
+              data: User[];
+              links: any[];
+              meta: {
+                  current_page: number;
+                  last_page: number;
+                  from: number;
+                  to: number;
+                  total: number;
+                  per_page: number;
+              };
+          }
+        | undefined;
     filter: 'withoutTrash' | 'withTrash' | 'onlyTrash' | 'all';
     perPage: number;
+    search: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -67,69 +66,110 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersPageProps) {
-    const { auth } = usePage<SharedData>().props;
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [currentFilter, setCurrentFilter] = useState<'withoutTrash' | 'withTrash' | 'onlyTrash' | 'all'>(filter);
-    const [currentPerPage, setCurrentPerPage] = useState<number>(perPage);
-    const [currentPage, setCurrentPage] = useState<number>(pageUsers?.meta?.current_page || 1);
-
-    const handleFilterChange = (newFilter: 'withoutTrash' | 'withTrash' | 'onlyTrash' | 'all') => {
-        setCurrentFilter(newFilter);
-        setCurrentPage(1); // Reset to first page when filter changes
-        router.get(users.index.url(), { filter: newFilter, perPage: currentPerPage, page: 1 });
-    };
-
-    const handlePerPageChange = (newPerPage: number) => {
-        setCurrentPerPage(newPerPage);
-        setCurrentPage(1); // Reset to first page when perPage changes
-        router.get(users.index.url(), { filter: currentFilter, perPage: newPerPage, page: 1 });
-    };
-
-    const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage);
-        router.get(users.index.url(), { filter: currentFilter, perPage: currentPerPage, page: newPage });
-    };
+export default function UsersIndex({
+    users: pageUsers,
+    filter,
+    perPage,
+    search,
+}: UsersPageProps) {
+    const getInitials = useInitials();
+    const {
+        currentFilter,
+        currentPerPage,
+        currentSearch,
+        loading,
+        handleFilterChange,
+        handlePerPageChange,
+        handlePageChange,
+        handleSearch,
+        setLoading,
+    } = useTableState({
+        initialFilter: filter,
+        initialPerPage: perPage,
+        initialSearch: search,
+        initialPage: pageUsers?.meta?.current_page || 1,
+        baseUrl: users.index.url(),
+    });
 
     const handleBulkDelete = (ids: string[]) => {
-        setSelectedIds(ids);
+        setLoading(true);
         router.delete(`/admin/users/bulk`, {
             data: { ids },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setLoading(false);
+            },
+            onError: () => {
+                setLoading(false);
+            },
         });
     };
 
     const handleBulkRestore = (ids: string[]) => {
-        setSelectedIds(ids);
-        router.post(`/admin/users/bulk/restore`, {
-            ids,
-        });
+        setLoading(true);
+        router.post(
+            `/admin/users/bulk/restore`,
+            {
+                ids,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setLoading(false);
+                },
+                onError: () => {
+                    setLoading(false);
+                },
+            },
+        );
     };
 
     const handleBulkForceDelete = (ids: string[]) => {
-        setSelectedIds(ids);
+        setLoading(true);
         router.delete(`/admin/users/bulk/force-delete`, {
             data: { ids },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setLoading(false);
+            },
+            onError: () => {
+                setLoading(false);
+            },
         });
     };
 
-    const getFilterLabel = () => {
-        switch (currentFilter) {
-            case 'withTrash':
-                return 'With Trash';
-            case 'onlyTrash':
-                return 'Only Trash';
-            case 'all':
-                return 'All Records';
-            case 'withoutTrash':
-            default:
-                return 'Without Trash';
-        }
-    };
+    const filterOptions = [
+        { key: 'withoutTrash', label: 'Without Trash' },
+        { key: 'withTrash', label: 'With Trash' },
+        { key: 'onlyTrash', label: 'Only Trash' },
+        { key: 'all', label: 'All Records' },
+    ];
 
     const columns: ColumnDef<User>[] = [
         {
             accessorKey: 'name',
             header: 'Name',
+            cell: ({ row }) => {
+                const user = row.original;
+
+                return (
+                    <div className={`flex items-center space-x-2`}>
+                        <Avatar className="h-8 w-8 overflow-hidden rounded-full">
+                            <AvatarImage
+                                src={user.avatar_small || user.avatar}
+                                alt={user.name}
+                            />
+                            <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                {getInitials(user.name)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <strong>{user.name}</strong>
+                    </div>
+                );
+            },
         },
         {
             accessorKey: 'email',
@@ -143,10 +183,7 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
                 return (
                     <div className="flex flex-wrap gap-1">
                         {roles.map((role) => (
-                            <Badge
-                                key={role.id}
-                                variant="secondary"
-                            >
+                            <Badge key={role.id} variant="secondary">
                                 {role.name}
                             </Badge>
                         ))}
@@ -159,8 +196,9 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
             header: 'Created At',
             enableHiding: true,
             cell: ({ row }) => {
-                const date = new Date(row.original.created_at);
-                return date.toLocaleDateString();
+                const date = row.original.created_at;
+                if (!date) return null;
+                return new Date(date).toLocaleDateString();
             },
         },
         {
@@ -168,8 +206,9 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
             header: 'Updated At',
             enableHiding: true,
             cell: ({ row }) => {
-                const date = new Date(row.original.updated_at);
-                return date.toLocaleDateString();
+                const date = row.original.updated_at;
+                if (!date) return null;
+                return new Date(date).toLocaleDateString();
             },
         },
         {
@@ -179,86 +218,68 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
             cell: ({ row }) => {
                 const deletedAt = row.original.deleted_at;
                 if (!deletedAt) return null;
-                const date = new Date(deletedAt);
-                return date.toLocaleDateString();
+                return new Date(deletedAt).toLocaleDateString();
             },
         },
-        {
-            id: 'actions',
-            header: () => <span className="sr-only">Actions</span>,
-            cell: ({ row }) => {
-                const user = row.original;
-                
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <RiMoreFill className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                {(currentFilter === 'withTrash' || currentFilter === 'onlyTrash') && user.deleted_at ? (
-                                    <>
-                                        <DropdownMenuItem
-                                            onClick={() => {
-                                                router.post(`/admin/users/${user.id}/restore`, {}, {
-                                                    preserveScroll: true,
-                                                });
-                                            }}
-                                        >
-                                            Restore
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
-                                            onClick={() => {
-                                                router.delete(`/admin/users/${user.id}/force-delete`, {
-                                                    preserveScroll: true,
-                                                });
-                                            }}
-                                        >
-                                            Force Delete
-                                        </DropdownMenuItem>
-                                    </>
-                                ) : (
-                                    <>
-                                        <DropdownMenuItem asChild>
-                                            <Link href={users.show.url({ user: user.id })}>
-                                                View
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                            <Link href={users.edit.url({ user: user.id })}>
-                                                Edit
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        {auth.user?.id !== user.id && (
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={users.destroy.url({ user: user.id })}
-                                                    method="delete"
-                                                    as="button"
-                                                >
-                                                    Delete
-                                                </Link>
-                                            </DropdownMenuItem>
-                                        )}
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-            enableSorting: false,
-            enableHiding: false,
-        },
-
     ];
+
+    const actions = {
+        view: (id: string) => users.show.url(id),
+        edit: (id: string) => users.edit.url(id),
+        delete: (id: string) => {
+            router.delete(users.destroy.url(id), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    setLoading(false);
+                },
+                onError: () => {
+                    setLoading(false);
+                },
+            });
+        },
+    };
+
+    // Add a simple check to see if pageUsers is undefined
+    if (!pageUsers) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Manage Users" />
+                <div className="p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold">
+                                User Management
+                            </h1>
+                            <p className="text-muted-foreground">
+                                Manage user accounts and their roles
+                            </p>
+                        </div>
+                        <Button asChild>
+                            <Link href={users.create.url()}>
+                                <RiAddLine className="mr-2 h-4 w-4" />
+                                Add User
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <div className="mt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>All Users</CardTitle>
+                                <CardDescription>
+                                    Loading users...
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p>No user data available.</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -288,50 +309,30 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex justify-between items-center mb-4">
-                                <div>
-                                    {/* Other controls can go here if needed */}
-                                </div>
-                                <div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline">
-                                                {getFilterLabel()} <RiMoreFill className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleFilterChange('withoutTrash')}>
-                                                Without Trash
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleFilterChange('withTrash')}>
-                                                With Trash
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleFilterChange('onlyTrash')}>
-                                                Only Trash
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleFilterChange('all')}>
-                                                All Records
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </div>
-                            <DataTable 
-                                columns={columns} 
-                                data={pageUsers?.data || []} 
+                            <EnhancedFilamentTable
+                                columns={columns}
+                                data={pageUsers.data || []}
                                 softDelete={true}
                                 columnVisibility={{
-                                    'created_at': false,
-                                    'updated_at': false,
-                                    'deleted_at': false,
+                                    created_at: false,
+                                    updated_at: false,
+                                    deleted_at: false,
                                 }}
                                 perPage={currentPerPage}
                                 onPerPageChange={handlePerPageChange}
                                 onDelete={handleBulkDelete}
                                 onRestore={handleBulkRestore}
                                 onForceDelete={handleBulkForceDelete}
-                                paginationMeta={pageUsers?.meta || undefined}
+                                paginationMeta={pageUsers.meta || undefined}
                                 onPageChange={handlePageChange}
+                                filters={filterOptions}
+                                onFilterChange={handleFilterChange}
+                                currentFilter={currentFilter}
+                                onSearch={handleSearch}
+                                searchPlaceholder="Search users..."
+                                searchQuery={currentSearch}
+                                loading={loading}
+                                actions={actions}
                             />
                         </CardContent>
                     </Card>
@@ -339,5 +340,4 @@ export default function UsersIndex({ users: pageUsers, filter, perPage }: UsersP
             </div>
         </AppLayout>
     );
-
 }

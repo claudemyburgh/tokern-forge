@@ -21,7 +21,8 @@ class UserController extends BaseController
         $filter = $request->query('filter', 'withoutTrash');
         $perPage = $request->query('perPage', 15);
         $page = $request->query('page', 1);
-        
+        $search = $request->query('search', '');
+
         // Validate perPage value
         $validPerPage = in_array($perPage, [10, 20, 30, 40, 50]) ? $perPage : 10;
 
@@ -32,6 +33,14 @@ class UserController extends BaseController
         }
 
         $query = User::with('roles');
+
+        // Apply search filter
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
         switch ($filter) {
             case 'onlyTrash':
@@ -55,6 +64,7 @@ class UserController extends BaseController
             'users' => new UserCollection($users),
             'filter' => $filter,
             'perPage' => $validPerPage,
+            'search' => $search,
         ]);
     }
 
