@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Token;
 
-use App\Models\Token;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 

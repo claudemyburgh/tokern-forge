@@ -16,7 +16,7 @@ This component mimics the Laravel Filament table UI with enhanced features and f
 ## Usage
 
 ```typescript
-import { EnhancedTable } from '@/components/enhanced-filament-table';
+import { EnhancedFilamentTable } from '@/components/enhanced-filament-table';
 
 // Define your columns
 const columns: ColumnDef<YourDataType>[] = [
@@ -32,7 +32,7 @@ const columns: ColumnDef<YourDataType>[] = [
 ];
 
 // In your component
-<EnhancedTable 
+<EnhancedFilamentTable 
   columns={columns} 
   data={yourData} 
   softDelete={true}

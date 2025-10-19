@@ -19,7 +19,7 @@ class UserController extends BaseController
         $this->authorize('manage users');
 
         $filter = $request->query('filter', 'withoutTrash');
-        $perPage = $request->query('perPage', 15);
+        $perPage = $request->query('perPage', 10);
         $page = $request->query('page', 1);
         $search = $request->query('search', '');
 
@@ -52,7 +52,6 @@ class UserController extends BaseController
             case 'all':
                 $query->withTrashed(); // Explicitly include trashed records
                 break;
-            case 'withoutTrash':
             default:
                 // Default behavior - only active records
                 break;

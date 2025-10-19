@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-// import { SearchForm } from "@/components/search-form";
-// import { TeamSwitcher } from "@/components/team-switcher";
 import TokenCreateController from '@/actions/App/Http/Controllers/Token/TokenCreateController';
 import TokenIndexController from '@/actions/App/Http/Controllers/Token/TokenIndexController';
 import AppLogo from '@/components/app-logo';
@@ -28,20 +26,20 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
     RiArrowRightSLine,
     RiCodeSSlashLine,
     RiCoinLine,
+    RiKeyLine,
     RiLeafLine,
     RiLoginCircleLine,
     RiScanLine,
     RiSettings3Line,
     RiShieldUserLine,
     RiUserSettingsLine,
-    RiKeyLine,
 } from '@remixicon/react';
-import { SharedData } from '@/types';
 
 // This is sample data.
 const data = {
@@ -113,33 +111,34 @@ const adminNav = {
     title: 'Administration',
     url: '#',
     items: [
-                {
-                    title: 'Manage Users',
-                    url: '/admin/users',
-                    icon: RiUserSettingsLine,
-                },
-                {
-                    title: 'Manage Roles',
-                    url: '/admin/roles',
-                    icon: RiShieldUserLine,
-                },
-                {
-                    title: 'Manage Permissions',
-                    url: '/admin/permissions',
-                    icon: RiKeyLine,
-                },
+        {
+            title: 'Manage Users',
+            url: '/admin/users',
+            icon: RiUserSettingsLine,
+        },
+        {
+            title: 'Manage Roles',
+            url: '/admin/roles',
+            icon: RiShieldUserLine,
+        },
+        {
+            title: 'Manage Permissions',
+            url: '/admin/permissions',
+            icon: RiKeyLine,
+        },
     ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const page = usePage<SharedData>();
     const user = page.props.auth.user;
-    
+
     // Check if user has permissions to view admin section
-    const canViewAdminSection = user && 
-        (user.permissions.includes('manage users') || 
-         user.permissions.includes('manage roles') || 
-         user.permissions.includes('manage permissions'));
+    const canViewAdminSection =
+        user &&
+        (user.permissions.includes('manage users') ||
+            user.permissions.includes('manage roles') ||
+            user.permissions.includes('manage permissions'));
 
     return (
         <Sidebar {...props}>
@@ -226,7 +225,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                                                         >
                                                                             <SidebarMenuSubButton
                                                                                 asChild
-                                                                                className={`opacity-50 hover:bg-transparent hover:opacity-100`}
+                                                                                className="opacity-50 hover:bg-transparent hover:opacity-100 data-[state=open]:bg-accent/50 space-x-2"
                                                                             >
                                                                                 <Link
                                                                                     href={
@@ -261,7 +260,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton
                                                 asChild
-                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
+                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto data-[state=open]:bg-accent/50 space-x-2"
                                                 isActive={isActive}
                                             >
                                                 <Link href={item.url}>
@@ -282,7 +281,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarGroupContent>
                     </SidebarGroup>
                 ))}
-                
+
                 {/* Admin section - only visible to users with appropriate permissions */}
                 {canViewAdminSection && (
                     <SidebarGroup key={adminNav.title}>
@@ -292,101 +291,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <SidebarGroupContent className="px-2">
                             <SidebarMenu>
                                 {adminNav.items.map((item) => {
-                                    const hasChildren =
-                                        item.children &&
-                                        item.children.length > 0;
                                     const isActive = page.url.startsWith(
                                         typeof item.url === 'string'
                                             ? item.url
                                             : item.url,
                                     );
 
-                                    // If item has children, render as collapsible
-                                    if (hasChildren) {
-                                        return (
-                                            <Collapsible
-                                                key={item.title}
-                                                asChild
-                                                defaultOpen={isActive}
-                                                className="group/collapsible"
-                                            >
-                                                <SidebarMenuItem>
-                                                    <CollapsibleTrigger asChild>
-                                                        <SidebarMenuButton
-                                                            className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
-                                                            isActive={isActive}
-                                                        >
-                                                            {item.icon && (
-                                                                <item.icon
-                                                                    className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"
-                                                                    size={22}
-                                                                    aria-hidden="true"
-                                                                />
-                                                            )}
-                                                            <span>
-                                                                {item.title}
-                                                            </span>
-                                                            <RiArrowRightSLine
-                                                                className="ml-auto text-muted-foreground/60 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-                                                                size={18}
-                                                            />
-                                                        </SidebarMenuButton>
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent>
-                                                        <SidebarMenuSub>
-                                                            {item.children?.map(
-                                                                (subItem) => {
-                                                                    const isSubItemActive =
-                                                                        page.url.startsWith(
-                                                                            typeof subItem.url ===
-                                                                                'string'
-                                                                                ? subItem.url
-                                                                                : subItem.url,
-                                                                        );
-                                                                    return (
-                                                                        <SidebarMenuSubItem
-                                                                            key={
-                                                                                subItem.title
-                                                                            }
-                                                                        >
-                                                                            <SidebarMenuSubButton
-                                                                                asChild
-                                                                                className={`opacity-50 hover:bg-transparent hover:opacity-100`}
-                                                                            >
-                                                                                <Link
-                                                                                    href={
-                                                                                        subItem.url
-                                                                                    }
-                                                                                    className={
-                                                                                        isSubItemActive
-                                                                                            ? 'text-primary'
-                                                                                            : ''
-                                                                                    }
-                                                                                >
-                                                                                    <span>
-                                                                                        {
-                                                                                            subItem.title
-                                                                                        }
-                                                                                    </span>
-                                                                                </Link>
-                                                                            </SidebarMenuSubButton>
-                                                                        </SidebarMenuSubItem>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </SidebarMenuSub>
-                                                    </CollapsibleContent>
-                                                </SidebarMenuItem>
-                                            </Collapsible>
-                                        );
-                                    }
-
-                                    // If no children, render as regular menu item
+                                    // Admin items don't have children, so render as regular menu item
                                     return (
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton
                                                 asChild
-                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto"
+                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto data-[state=open]:bg-accent/50 space-x-2"
                                                 isActive={isActive}
                                             >
                                                 <Link href={item.url}>

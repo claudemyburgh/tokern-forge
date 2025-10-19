@@ -26,8 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         URL::forceHttps(app()->isProduction());
-        
-        // Register the User observer
-        User::observe(UserObserver::class);
+
+
     }
 }

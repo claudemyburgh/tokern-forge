@@ -8,19 +8,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import roles from '@/routes/admin/roles';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 
 interface Permission {
@@ -42,6 +35,9 @@ interface RolesPageProps {
         links: any[];
         meta: any;
     };
+    filter: 'withoutTrash' | 'onlyTrash' | 'all';
+    perPage: number;
+    search: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,13 +54,31 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Core roles that cannot be deleted
 const coreRoles = ['super-admin'];
 
-export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+// Since roles don't have soft deletes, we only show relevant filter options
+const filterOptions = [
+    { key: 'all', label: 'All Records' },
+];
+
+export default function RolesIndex({ 
+    roles: pageRoles,
+    filter,
+    perPage,
+    search,
+}: RolesPageProps) {
+    const [loading, setLoading] = useState(false);
 
     const handleBulkDelete = (ids: string[]) => {
-        setSelectedIds(ids);
+        setLoading(true);
         router.delete(`/admin/roles/bulk`, {
             data: { ids },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setLoading(false);
+            },
+            onError: () => {
+                setLoading(false);
+            },
         });
     };
 
@@ -95,61 +109,7 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                 );
             },
         },
-        {
-            id: 'actions',
-            header: () => <span className="sr-only">Actions</span>,
-            cell: ({ row }) => {
-                const role = row.original;
-                const isCore = coreRoles.includes(role.name);
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href={roles.show.url({ role: role.id })}
-                                    >
-                                        View
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href={roles.edit.url({ role: role.id })}
-                                    >
-                                        Edit
-                                    </Link>
-                                </DropdownMenuItem>
-                                {!isCore && (
-                                    <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        asChild
-                                    >
-                                        <Link
-                                            href={roles.destroy.url({
-                                                role: role.id,
-                                            })}
-                                            method="delete"
-                                            as="button"
-                                            preserveScroll
-                                        >
-                                            Delete
-                                        </Link>
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-            size: 50,
-        },
+        // Actions column is automatically added by EnhancedTable component
     ];
 
     return (
@@ -165,7 +125,7 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                     </div>
                     <Button asChild>
                         <Link href={roles.create.url()}>
-                            <RiAddLine className="mr-2 h-4 w-4" />
+                            <RiAddLine className="h-4 w-4" />
                             Add Role
                         </Link>
                     </Button>
@@ -188,9 +148,21 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                                     updated_at: false,
                                 }}
                                 perPage={15}
-                                filters={[]}
+                                filters={filterOptions}
                                 currentFilter="all"
                                 searchPlaceholder="Search roles..."
+                                onDelete={handleBulkDelete}
+                                loading={loading}
+                                actions={{
+                                    view: (id: string) => roles.show.url({ role: id }),
+                                    edit: (id: string) => roles.edit.url({ role: id }),
+                                    delete: (id: string) => {
+                                        router.delete(roles.destroy.url({ role: id }), {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }
+                                }}
                             />
                         </CardContent>
                     </Card>

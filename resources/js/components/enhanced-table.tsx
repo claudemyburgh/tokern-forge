@@ -54,7 +54,7 @@ import {
     Eye,
     EyeOff,
     Filter,
-    MoreHorizontal,
+    MoreVertical,
     Search,
 } from 'lucide-react';
 
@@ -142,38 +142,6 @@ export function EnhancedTable<TData, TValue>({
         null,
     );
 
-    // @ts-ignore
-    const table = useReactTable({
-        data: data && Array.isArray(data) ? data : [],
-
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-            rowSelection,
-        },
-        initialState: {
-            pagination: {
-                pageSize: perPage,
-            },
-        },
-        // Disable client-side pagination when using server-side pagination
-        manualPagination: !!paginationMeta,
-    });
-
-    // Log for debugging
-    console.log('Table data:', data);
-    console.log('Table row count:', table.getRowModel().rows?.length);
-    console.log('Pagination meta:', paginationMeta);
-
     // Add selection column as the first column
     const selectableColumns = React.useMemo(() => {
         const cols = [...columns];
@@ -192,7 +160,7 @@ export function EnhancedTable<TData, TValue>({
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                     <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
+                                    <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -345,6 +313,32 @@ export function EnhancedTable<TData, TValue>({
         ];
     }, [columns, onView, onEdit, actions]);
 
+    const table = useReactTable({
+        data: data || [],
+        columns: selectableColumns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+            rowSelection,
+        },
+        initialState: {
+            pagination: {
+                pageSize: perPage,
+            },
+        },
+        // Disable client-side pagination when using server-side pagination
+        manualPagination: !!paginationMeta,
+    });
+
     // Update table pagination when perPage changes
     React.useEffect(() => {
         table.setPageSize(perPage);
@@ -471,9 +465,12 @@ export function EnhancedTable<TData, TValue>({
     const displayTotal = paginationMeta?.total
         ? extractValue(paginationMeta.total)
         : 0;
+    const displayPerPage = paginationMeta?.per_page
+        ? extractValue(paginationMeta.per_page)
+        : perPage;
 
     return (
-        <div>
+        <div className="filament-table">
             {/* Table Header with Filters and Search */}
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="flex flex-1 items-center space-x-2">
@@ -559,8 +556,8 @@ export function EnhancedTable<TData, TValue>({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-9">
-                                <Columns2 className="mr-2 h-4 w-4" />
-                                Columns
+                                <Columns2 className="h-4 w-4" />
+                                <span className="sr-only">Columns</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
@@ -624,15 +621,17 @@ export function EnhancedTable<TData, TValue>({
                                                     )}
                                                     {header.column.getCanSort() && (
                                                         <>
-                                                            {header.column.getIsSorted() ===
-                                                            'asc' ? (
-                                                                <ChevronUp className="ml-1 h-4 w-4" />
-                                                            ) : header.column.getIsSorted() ===
-                                                              'desc' ? (
-                                                                <ChevronDown className="ml-1 h-4 w-4" />
-                                                            ) : (
-                                                                <ChevronsUpDown className="ml-1 h-4 w-4" />
-                                                            )}
+                                                            <>
+                                                                {header.column.getIsSorted() ===
+                                                                'asc' ? (
+                                                                    <ChevronUp className="ml-1 size-3 opacity-30" />
+                                                                ) : header.column.getIsSorted() ===
+                                                                  'desc' ? (
+                                                                    <ChevronDown className="ml-1 size-3 opacity-30" />
+                                                                ) : (
+                                                                    <ChevronsUpDown className="ml-1 size-3 opacity-30" />
+                                                                )}
+                                                            </>
                                                         </>
                                                     )}
                                                 </div>

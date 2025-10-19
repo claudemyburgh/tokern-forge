@@ -6,20 +6,56 @@ use App\Http\Controllers\Admin\BaseController;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Http\Resources\Permissions\PermissionCollection;
 
 class PermissionController extends BaseController
 {
     /**
      * Display a listing of permissions.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('manage permissions');
-        
-        $permissions = Permission::with('roles')->latest()->paginate(15);
-        
+
+        $filter = $request->query('filter', 'all');
+        $perPage = $request->query('perPage', 10);
+        $page = $request->query('page', 1);
+        $search = $request->query('search', '');
+
+        // Validate perPage value
+        $validPerPage = in_array($perPage, [10, 20, 30, 40, 50]) ? $perPage : 10;
+
+        // Validate and cast page to integer
+        $validPage = is_numeric($page) ? (int) $page : 1;
+        if ($validPage < 1) {
+            $validPage = 1;
+        }
+
+        $query = Permission::with('roles');
+
+        // Apply search filter
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        // Permissions don't have soft deletes, so we only support basic filtering
+        // The 'all' filter is the only relevant option since there are no trashed records
+        switch ($filter) {
+            case 'all':
+            default:
+                // Default behavior - all records
+                break;
+        }
+
+        $permissions = $query->latest()->paginate($validPerPage, ['*'], 'page', $validPage);
+
         return inertia('admin/permissions/index', [
-            'permissions' => $permissions,
+            'permissions' => new PermissionCollection($permissions),
+            'filter' => $filter,
+            'perPage' => $validPerPage,
+            'search' => $search,
         ]);
     }
 

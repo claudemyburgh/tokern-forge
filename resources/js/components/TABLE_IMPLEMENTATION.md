@@ -4,7 +4,7 @@ This document describes the implementation of a Laravel Filament-like table comp
 
 ## Components Created
 
-1. **EnhancedTable** - Main table component with Filament-like UI
+1. **EnhancedFilamentTable** - Main table component with Filament-like UI
 2. **useTableState** - Custom hook for managing table state
 3. **Route utilities** - Helper functions for route management
 
@@ -77,14 +77,14 @@ resources/js/
 
 ### Users Index Page
 - Implemented useTableState hook for state management
-- Integrated EnhancedTable component
+- Integrated EnhancedFilamentTable component
 - Added loading states for better UX
 - Proper error handling
 
 ## Usage Example
 
 ```typescript
-import { EnhancedTable } from '@/components/enhanced-filament-table';
+import { EnhancedFilamentTable } from '@/components/enhanced-filament-table';
 import { useTableState } from '@/hooks/use-table-state';
 
 // In your component
@@ -105,7 +105,7 @@ const {
   baseUrl: '/admin/users'
 });
 
-<EnhancedTable 
+<EnhancedFilamentTable 
   columns={columns}
   data={tableData}
   softDelete={true}

@@ -13,6 +13,6 @@ class TokenSeeder extends Seeder
      */
     public function run(): void
     {
-        Token::factory()->times(100)->create();
+        Token::factory()->times(10)->create();
     }
 }

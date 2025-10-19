@@ -12,7 +12,8 @@ import {
 import { useInitials } from '@/hooks/use-initials';
 import { useTableState } from '@/hooks/use-table-state';
 import AppLayout from '@/layouts/app-layout';
-import users from '@/routes/admin/users';
+
+import * as users from '@/routes/admin/users';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
@@ -50,7 +51,7 @@ interface UsersPageProps {
               };
           }
         | undefined;
-    filter: 'withoutTrash' | 'withTrash' | 'onlyTrash' | 'all';
+    filter: 'withoutTrash' | 'onlyTrash' | 'all';
     perPage: number;
     search: string;
 }
@@ -143,7 +144,6 @@ export default function UsersIndex({
 
     const filterOptions = [
         { key: 'withoutTrash', label: 'Without Trash' },
-        { key: 'withTrash', label: 'With Trash' },
         { key: 'onlyTrash', label: 'Only Trash' },
         { key: 'all', label: 'All Records' },
     ];
@@ -294,7 +294,7 @@ export default function UsersIndex({
                     </div>
                     <Button asChild>
                         <Link href={users.create.url()}>
-                            <RiAddLine className="mr-2 h-4 w-4" />
+                            <RiAddLine className="h-4 w-4" />
                             Add User
                         </Link>
                     </Button>

@@ -8,18 +8,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
+import permissions from '@/routes/admin/permissions';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 
 interface Role {
@@ -41,6 +35,9 @@ interface PermissionsPageProps {
         links: any[];
         meta: any;
     };
+    filter: 'withoutTrash' | 'onlyTrash' | 'all';
+    perPage: number;
+    search: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -50,7 +47,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Permissions',
-        href: '/admin/permissions',
+        href: permissions.index.url(),
     },
 ];
 
@@ -66,15 +63,31 @@ const corePermissions = [
     'manage settings',
 ];
 
+// Since permissions don't have soft deletes, we only show relevant filter options
+const filterOptions = [
+    { key: 'all', label: 'All Records' },
+];
+
 export default function PermissionsIndex({
-    permissions,
+    permissions: pagePermissions,
+    filter,
+    perPage,
+    search,
 }: PermissionsPageProps) {
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const handleBulkDelete = (ids: string[]) => {
-        setSelectedIds(ids);
+        setLoading(true);
         router.delete('/admin/permissions/bulk', {
             data: { ids },
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setLoading(false);
+            },
+            onError: () => {
+                setLoading(false);
+            },
         });
     };
 
@@ -105,59 +118,7 @@ export default function PermissionsIndex({
                 );
             },
         },
-        {
-            id: 'actions',
-            header: () => <span className="sr-only">Actions</span>,
-            cell: ({ row }) => {
-                const permission = row.original;
-                const isCore = corePermissions.includes(permission.name);
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href={`/admin/permissions/${permission.id}`}
-                                    >
-                                        View
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href={`/admin/permissions/${permission.id}/edit`}
-                                    >
-                                        Edit
-                                    </Link>
-                                </DropdownMenuItem>
-                                {!isCore && (
-                                    <DropdownMenuItem
-                                        className="text-destructive focus:text-destructive"
-                                        asChild
-                                    >
-                                        <Link
-                                            href={`/admin/permissions/${permission.id}`}
-                                            method="delete"
-                                            as="button"
-                                            preserveScroll
-                                        >
-                                            Delete
-                                        </Link>
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-            size: 50,
-        },
+        // Actions column is automatically added by EnhancedTable component
     ];
 
     return (
@@ -174,8 +135,8 @@ export default function PermissionsIndex({
                         </p>
                     </div>
                     <Button asChild>
-                        <Link href="/admin/permissions/create">
-                            <RiAddLine className="mr-2 h-4 w-4" />
+                        <Link href={permissions.create.url()}>
+                            <RiAddLine className="h-4 w-4" />
                             Add Permission
                         </Link>
                     </Button>
@@ -192,15 +153,27 @@ export default function PermissionsIndex({
                         <CardContent>
                             <EnhancedTable
                                 columns={columns}
-                                data={permissions.data}
+                                data={pagePermissions.data}
                                 columnVisibility={{
                                     created_at: false,
                                     updated_at: false,
                                 }}
                                 perPage={15}
-                                filters={[]}
+                                filters={filterOptions}
                                 currentFilter="all"
                                 searchPlaceholder="Search permissions..."
+                                onDelete={handleBulkDelete}
+                                loading={loading}
+                                actions={{
+                                    view: (id: string) => permissions.show.url({ permission: id }),
+                                    edit: (id: string) => permissions.edit.url({ permission: id }),
+                                    delete: (id: string) => {
+                                        router.delete(permissions.destroy.url({ permission: id }), {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    }
+                                }}
                             />
                         </CardContent>
                     </Card>

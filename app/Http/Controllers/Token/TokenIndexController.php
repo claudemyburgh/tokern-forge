@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Token;
 
-use App\Actions\ViewTokens;
+use App\Actions\Token\ViewTokens;
 use App\Http\Controllers\Controller;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Inertia\Inertia;

@@ -115,32 +115,6 @@ export default function Dashboard() {
                             </Can>
                         </CardContent>
                     </Card>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. A
-                    accusamus culpa deserunt dolor eligendi et ex quae quidem
-                    rem rerum sapiente, vel. Accusantium aut beatae culpa,
-                    cumque deserunt doloremque dolorum enim et eveniet expedita
-                    facere facilis, in incidunt iusto molestiae obcaecati
-                    perferendis quae quasi quibusdam quod recusandae similique
-                    sint sunt tenetur totam ullam velit voluptatibus?
-                    Accusantium, cupiditate dicta ducimus ex fugit laborum
-                    maxime officiis omnis perferendis sed temporibus veritatis
-                    voluptatem. Commodi laudantium libero magnam neque officiis
-                    porro tempore vel voluptatibus. Illum modi neque omnis
-                    quaerat sed similique. Deleniti deserunt ipsa iure obcaecati
-                    odio similique voluptatem! Dolore earum non repellat. Ab
-                    accusamus aliquam, animi aspernatur at, atque deserunt dicta
-                    dolore doloremque dolorum ducimus earum eligendi enim, esse
-                    eum ex excepturi explicabo facilis fugit in incidunt iusto
-                    molestias mollitia nesciunt nihil placeat praesentium
-                    quaerat quia quis quisquam quo repellat repudiandae sed
-                    velit voluptas voluptatem voluptatibus. Accusantium culpa
-                    cum debitis distinctio, et eveniet exercitationem explicabo
-                    ipsam laborum nostrum odit quia quo repellendus
-                    reprehenderit soluta, temporibus unde, vero? Architecto, hic
-                    iusto modi officiis quisquam quod vel! Alias aperiam commodi
-                    consectetur cum fugiat harum hic illo illum, ipsam itaque
-                    libero numquam odio, officia omnis quia quod reprehenderit
-                    unde. Autem deserunt distinctio nulla porro quae quo?
                 </div>
             </div>
         </AppLayout>
