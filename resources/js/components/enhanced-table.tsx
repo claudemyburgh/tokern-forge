@@ -58,7 +58,7 @@ import {
     Search,
 } from 'lucide-react';
 
-interface EnhancedFilamentTableProps<TData, TValue> {
+interface EnhancedTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data?: TData[];
     softDelete?: boolean;
@@ -100,7 +100,7 @@ interface FilterOption {
     label: string;
 }
 
-export function EnhancedFilamentTable<TData, TValue>({
+export function EnhancedTable<TData, TValue>({
     columns,
     data = [],
     softDelete = false,
@@ -124,7 +124,7 @@ export function EnhancedFilamentTable<TData, TValue>({
     onDeleteSingle,
     actions,
     skeletonRender,
-}: EnhancedFilamentTableProps<TData, TValue>) {
+}: EnhancedTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -142,6 +142,38 @@ export function EnhancedFilamentTable<TData, TValue>({
         null,
     );
 
+    // @ts-ignore
+    const table = useReactTable({
+        data: data && Array.isArray(data) ? data : [],
+
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+            rowSelection,
+        },
+        initialState: {
+            pagination: {
+                pageSize: perPage,
+            },
+        },
+        // Disable client-side pagination when using server-side pagination
+        manualPagination: !!paginationMeta,
+    });
+
+    // Log for debugging
+    console.log('Table data:', data);
+    console.log('Table row count:', table.getRowModel().rows?.length);
+    console.log('Pagination meta:', paginationMeta);
+
     // Add selection column as the first column
     const selectableColumns = React.useMemo(() => {
         const cols = [...columns];
@@ -149,9 +181,7 @@ export function EnhancedFilamentTable<TData, TValue>({
         // Add actions column
         cols.push({
             id: 'actions',
-            header: () => (
-                <span className="sr-only">Actions</span>
-            ),
+            header: () => <span className="sr-only">Actions</span>,
             cell: ({ row }) => {
                 const id = (row.original as any).id?.toString();
                 const isDeleted = !!(row.original as any).deleted_at;
@@ -183,7 +213,9 @@ export function EnhancedFilamentTable<TData, TValue>({
                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setSelectedRowId(id);
-                                                        setActionType('restore');
+                                                        setActionType(
+                                                            'restore',
+                                                        );
                                                         setIsRestoreDialogOpen(
                                                             true,
                                                         );
@@ -234,7 +266,9 @@ export function EnhancedFilamentTable<TData, TValue>({
                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setSelectedRowId(id);
-                                                        setActionType('restore');
+                                                        setActionType(
+                                                            'restore',
+                                                        );
                                                         setIsRestoreDialogOpen(
                                                             true,
                                                         );
@@ -310,32 +344,6 @@ export function EnhancedFilamentTable<TData, TValue>({
             ...cols,
         ];
     }, [columns, onView, onEdit, actions]);
-
-    const table = useReactTable({
-        data: data || [],
-        columns: selectableColumns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-            rowSelection,
-        },
-        initialState: {
-            pagination: {
-                pageSize: perPage,
-            },
-        },
-        // Disable client-side pagination when using server-side pagination
-        manualPagination: !!paginationMeta,
-    });
 
     // Update table pagination when perPage changes
     React.useEffect(() => {
@@ -438,7 +446,9 @@ export function EnhancedFilamentTable<TData, TValue>({
     };
 
     // Calculate current page and last page for display
-    const currentPage = paginationMeta?.current_page || table.getState().pagination.pageIndex + 1;
+    const currentPage =
+        paginationMeta?.current_page ||
+        table.getState().pagination.pageIndex + 1;
     const lastPage = paginationMeta?.last_page || table.getPageCount();
 
     // Handle case where pagination meta values might be arrays
@@ -454,13 +464,16 @@ export function EnhancedFilamentTable<TData, TValue>({
     const displayLastPage = extractValue(lastPage);
 
     // Also extract other pagination values
-    const displayFrom = paginationMeta?.from ? extractValue(paginationMeta.from) : 1;
+    const displayFrom = paginationMeta?.from
+        ? extractValue(paginationMeta.from)
+        : 1;
     const displayTo = paginationMeta?.to ? extractValue(paginationMeta.to) : 1;
-    const displayTotal = paginationMeta?.total ? extractValue(paginationMeta.total) : 0;
-    const displayPerPage = paginationMeta?.per_page ? extractValue(paginationMeta.per_page) : perPage;
+    const displayTotal = paginationMeta?.total
+        ? extractValue(paginationMeta.total)
+        : 0;
 
     return (
-        <div className="filament-table">
+        <div>
             {/* Table Header with Filters and Search */}
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="flex flex-1 items-center space-x-2">
@@ -633,19 +646,26 @@ export function EnhancedFilamentTable<TData, TValue>({
                     <TableBody>
                         {loading ? (
                             // Render skeleton rows when loading
-                            Array.from({ length: perPage }).map((_, rowIndex) => (
-                                <TableRow key={rowIndex}>
-                                    {selectableColumns.map((_, colIndex) => (
-                                        <TableCell key={colIndex}>
-                                            {skeletonRender ? (
-                                                skeletonRender(rowIndex, colIndex)
-                                            ) : (
-                                                <Skeleton className="h-4 w-1/2" />
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            Array.from({ length: perPage }).map(
+                                (_, rowIndex) => (
+                                    <TableRow key={rowIndex}>
+                                        {selectableColumns.map(
+                                            (_, colIndex) => (
+                                                <TableCell key={colIndex}>
+                                                    {skeletonRender ? (
+                                                        skeletonRender(
+                                                            rowIndex,
+                                                            colIndex,
+                                                        )
+                                                    ) : (
+                                                        <Skeleton className="h-4 w-1/2" />
+                                                    )}
+                                                </TableCell>
+                                            ),
+                                        )}
+                                    </TableRow>
+                                ),
+                            )
                         ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
@@ -685,7 +705,8 @@ export function EnhancedFilamentTable<TData, TValue>({
             {/* Pagination */}
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                    Showing {displayFrom} to {displayTo} of {displayTotal} entries
+                    Showing {displayFrom} to {displayTo} of {displayTotal}{' '}
+                    entries
                 </div>
                 <div className="flex items-center space-x-6 lg:space-x-8">
                     <div className="flex items-center space-x-2">
@@ -723,8 +744,7 @@ export function EnhancedFilamentTable<TData, TValue>({
                             className="hidden h-8 w-8 p-0 lg:flex"
                             onClick={() => onPageChange?.(1)}
                             disabled={
-                                !paginationMeta ||
-                                displayCurrentPage === 1
+                                !paginationMeta || displayCurrentPage === 1
                             }
                         >
                             <span className="sr-only">Go to first page</span>

@@ -1,4 +1,5 @@
-import roles from '@/routes/admin/roles';
+import { EnhancedTable } from '@/components/enhanced-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,22 +8,20 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { RiAddLine } from '@remixicon/react';
-import { DataTable } from '@/components/data-table';
-import {
-    type ColumnDef,
-} from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import AppLayout from '@/layouts/app-layout';
+import roles from '@/routes/admin/roles';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { RiAddLine } from '@remixicon/react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 
 interface Permission {
     id: number;
@@ -83,15 +82,12 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                     <div className="flex flex-wrap gap-1">
                         {permissions.length > 0 ? (
                             permissions.map((permission) => (
-                                <Badge
-                                    key={permission.id}
-                                    variant="secondary"
-                                >
+                                <Badge key={permission.id} variant="secondary">
                                     {permission.name}
                                 </Badge>
                             ))
                         ) : (
-                            <span className="text-muted-foreground text-sm">
+                            <span className="text-sm text-muted-foreground">
                                 No permissions assigned
                             </span>
                         )}
@@ -101,17 +97,18 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: () => <span className="sr-only">Actions</span>,
             cell: ({ row }) => {
                 const role = row.original;
                 const isCore = coreRoles.includes(role.name);
-                
+
                 return (
                     <div className="flex justify-end">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    Actions
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -135,7 +132,9 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                                         asChild
                                     >
                                         <Link
-                                            href={roles.destroy.url({ role: role.id })}
+                                            href={roles.destroy.url({
+                                                role: role.id,
+                                            })}
                                             method="delete"
                                             as="button"
                                             preserveScroll
@@ -149,6 +148,7 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                     </div>
                 );
             },
+            size: 50,
         },
     ];
 
@@ -180,10 +180,17 @@ export default function RolesIndex({ roles: pageRoles }: RolesPageProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <DataTable 
-                                columns={columns} 
-                                data={pageRoles.data} 
-                                onDelete={handleBulkDelete}
+                            <EnhancedTable
+                                columns={columns}
+                                data={pageRoles.data}
+                                columnVisibility={{
+                                    created_at: false,
+                                    updated_at: false,
+                                }}
+                                perPage={15}
+                                filters={[]}
+                                currentFilter="all"
+                                searchPlaceholder="Search roles..."
                             />
                         </CardContent>
                     </Card>

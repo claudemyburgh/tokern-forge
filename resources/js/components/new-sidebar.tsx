@@ -113,11 +113,6 @@ const adminNav = {
     title: 'Administration',
     url: '#',
     items: [
-        {
-            title: 'User Management',
-            url: '/admin/users',
-            icon: RiShieldUserLine,
-            children: [
                 {
                     title: 'Manage Users',
                     url: '/admin/users',
@@ -133,8 +128,6 @@ const adminNav = {
                     url: '/admin/permissions',
                     icon: RiKeyLine,
                 },
-            ],
-        },
     ],
 };
 

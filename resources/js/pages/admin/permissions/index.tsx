@@ -1,3 +1,5 @@
+import { EnhancedTable } from '@/components/enhanced-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -6,22 +8,19 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { RiAddLine } from '@remixicon/react';
-import { DataTable } from '@/components/data-table';
-import {
-    type ColumnDef,
-} from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import { RiAddLine } from '@remixicon/react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 
 interface Role {
     id: number;
@@ -93,10 +92,7 @@ export default function PermissionsIndex({
                     <div className="flex flex-wrap gap-1">
                         {roles.length > 0 ? (
                             roles.map((role) => (
-                                <Badge
-                                    key={role.id}
-                                    variant="secondary"
-                                >
+                                <Badge key={role.id} variant="secondary">
                                     {role.name}
                                 </Badge>
                             ))
@@ -111,17 +107,18 @@ export default function PermissionsIndex({
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: () => <span className="sr-only">Actions</span>,
             cell: ({ row }) => {
                 const permission = row.original;
                 const isCore = corePermissions.includes(permission.name);
-                
+
                 return (
                     <div className="flex justify-end">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    Actions
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -159,6 +156,7 @@ export default function PermissionsIndex({
                     </div>
                 );
             },
+            size: 50,
         },
     ];
 
@@ -168,7 +166,9 @@ export default function PermissionsIndex({
             <div className="p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Permission Management</h1>
+                        <h1 className="text-2xl font-bold">
+                            Permission Management
+                        </h1>
                         <p className="text-muted-foreground">
                             Manage system permissions and assign them to roles
                         </p>
@@ -190,10 +190,17 @@ export default function PermissionsIndex({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <DataTable 
-                                columns={columns} 
-                                data={permissions.data} 
-                                onDelete={handleBulkDelete}
+                            <EnhancedTable
+                                columns={columns}
+                                data={permissions.data}
+                                columnVisibility={{
+                                    created_at: false,
+                                    updated_at: false,
+                                }}
+                                perPage={15}
+                                filters={[]}
+                                currentFilter="all"
+                                searchPlaceholder="Search permissions..."
                             />
                         </CardContent>
                     </Card>
