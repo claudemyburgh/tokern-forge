@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\BaseController;
+use App\Http\Requests\Admin\StorePermissionRequest;
+use App\Http\Requests\Admin\UpdatePermissionRequest;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -76,23 +78,41 @@ class PermissionController extends BaseController
     /**
      * Store a newly created permission in storage.
      */
-    public function store(Request $request)
+    public function store(StorePermissionRequest $request)
     {
         $this->authorize('manage permissions');
         
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions',
-            'roles' => 'array|exists:roles,name',
-        ]);
+        $validated = $request->validated();
 
-        $permission = Permission::create(['name' => $validated['name']]);
+        // Get the guards or default to web
+        $guards = $validated['guards'] ?? ['web'];
+        
+        // Create permissions for each selected guard
+        $createdPermissions = [];
+        foreach ($guards as $guard) {
+            // Check if permission already exists for this guard
+            $existingPermission = Permission::where('name', $validated['name'])
+                ->where('guard_name', $guard)
+                ->first();
+                
+            if (!$existingPermission) {
+                $permission = Permission::create([
+                    'name' => $validated['name'],
+                    'guard_name' => $guard
+                ]);
+                $createdPermissions[] = $permission;
+            }
+        }
 
-        if (isset($validated['roles'])) {
-            $permission->assignRole($validated['roles']);
+        // Assign roles to all created permissions
+        if (isset($validated['roles']) && !empty($createdPermissions)) {
+            foreach ($createdPermissions as $permission) {
+                $permission->assignRole($validated['roles']);
+            }
         }
 
         return redirect()->route('admin.permissions.index')
-            ->with('success', 'Permission created successfully.');
+            ->with('success', 'Permission(s) created successfully.');
     }
 
     /**
@@ -128,14 +148,11 @@ class PermissionController extends BaseController
     /**
      * Update the specified permission in storage.
      */
-    public function update(Request $request, Permission $permission)
+    public function update(UpdatePermissionRequest $request, Permission $permission)
     {
         $this->authorize('manage permissions');
         
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:permissions,name,' . $permission->id,
-            'roles' => 'array|exists:roles,name',
-        ]);
+        $validated = $request->validated();
 
         $permission->update(['name' => $validated['name']]);
 

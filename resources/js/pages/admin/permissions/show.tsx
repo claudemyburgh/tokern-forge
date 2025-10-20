@@ -1,4 +1,4 @@
-import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -36,7 +36,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Permissions',
-        href: PermissionController.index.url(),
+        href: '/admin/permissions',
     },
     {
         title: 'View',
@@ -75,13 +75,13 @@ export default function ShowPermission({ permission }: ShowPermissionPageProps) 
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={PermissionController.index.url()}>
+                            <Link href="/admin/permissions">
                                 <RiArrowLeftLine className="mr-2 h-4 w-4" />
                                 Back to Permissions
                             </Link>
                         </Button>
                         <Button asChild>
-                            <Link href={PermissionController.edit.url({ permission: permission.id })}>
+                            <Link href={`/admin/permissions/${permission.id}/edit`}>
                                 <RiEditLine className="mr-2 h-4 w-4" />
                                 Edit Permission
                             </Link>

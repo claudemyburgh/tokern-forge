@@ -13,7 +13,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { useTableState } from '@/hooks/use-table-state';
 import AppLayout from '@/layouts/app-layout';
 
-import * as users from '@/routes/admin/users';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
@@ -63,7 +63,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Users',
-        href: users.index.url(),
+        href: '/admin/users',
     },
 ];
 
@@ -89,7 +89,7 @@ export default function UsersIndex({
         initialPerPage: perPage,
         initialSearch: search,
         initialPage: pageUsers?.meta?.current_page || 1,
-        baseUrl: users.index.url(),
+        baseUrl: '/admin/users',
     });
 
     const handleBulkDelete = (ids: string[]) => {
@@ -224,10 +224,10 @@ export default function UsersIndex({
     ];
 
     const actions = {
-        view: (id: string) => users.show.url(id),
-        edit: (id: string) => users.edit.url(id),
+        view: (id: string) => `/admin/users/${id}`,
+        edit: (id: string) => `/admin/users/${id}/edit`,
         delete: (id: string) => {
-            router.delete(users.destroy.url(id), {
+            router.delete(`/admin/users/${id}`, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -256,7 +256,7 @@ export default function UsersIndex({
                             </p>
                         </div>
                         <Button asChild>
-                            <Link href={users.create.url()}>
+                            <Link href="/admin/users/create">
                                 <RiAddLine className="mr-2 h-4 w-4" />
                                 Add User
                             </Link>
@@ -293,7 +293,7 @@ export default function UsersIndex({
                         </p>
                     </div>
                     <Button asChild>
-                        <Link href={users.create.url()}>
+                        <Link href="/admin/users/create">
                             <RiAddLine className="h-4 w-4" />
                             Add User
                         </Link>

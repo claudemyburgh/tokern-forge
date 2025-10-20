@@ -17,6 +17,7 @@ class PermissionResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'guard_name' => $this->guard_name,
             'roles' => $this->roles->map->only(['id', 'name']),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

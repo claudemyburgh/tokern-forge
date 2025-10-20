@@ -1,4 +1,4 @@
-import users from '@/routes/admin/users';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Users',
-        href: users.index.url(),
+        href: '/admin/users',
     },
     {
         title: 'View',
@@ -71,13 +71,13 @@ export default function ShowUser({ user }: ShowUserPageProps) {
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={users.index.url()}>
+                            <Link href="/admin/users">
                                 <RiArrowLeftLine className="mr-2 h-4 w-4" />
                                 Back to Users
                             </Link>
                         </Button>
                         <Button asChild>
-                            <Link href={users.edit.url({ user: user.id })}>
+                            <Link href={`/admin/users/${user.id}/edit`}>
                                 <RiEditLine className="mr-2 h-4 w-4" />
                                 Edit User
                             </Link>

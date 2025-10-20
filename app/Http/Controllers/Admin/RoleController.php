@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\BaseController;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Http\Requests\Admin\StoreRoleRequest;
+use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Http\Resources\Roles\RoleCollection;
+use App\Http\Resources\Roles\RoleResource;
+use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends BaseController
 {
@@ -66,29 +69,47 @@ class RoleController extends BaseController
     {
         $this->authorize('manage roles');
 
+        // Get all permissions grouped by guard
         $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy('guard_name');
 
         return inertia('admin/roles/create', [
-            'permissions' => $permissions,
+            'permissions' => $groupedPermissions,
         ]);
     }
 
     /**
      * Store a newly created role in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
         $this->authorize('manage roles');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles',
-            'permissions' => 'array|exists:permissions,name',
-        ]);
+        $validated = $request->validated();
 
         $role = Role::create(['name' => $validated['name']]);
 
         if (isset($validated['permissions'])) {
-            $role->givePermissionTo($validated['permissions']);
+            // Handle permissions with guards
+            $permissionIds = [];
+            foreach ($validated['permissions'] as $guard => $perms) {
+                if (is_array($perms)) {
+                    foreach ($perms as $permissionName) {
+                        // Find the permission with the specific guard
+                        $permission = Permission::where('name', $permissionName)
+                            ->where('guard_name', $guard)
+                            ->first();
+                        if ($permission) {
+                            $permissionIds[] = $permission->id;
+                        }
+                        // If permission not found, we silently skip it to prevent errors
+                    }
+                }
+            }
+            // Only sync if we have valid permission IDs
+            if (!empty($permissionIds)) {
+                $role->syncPermissions($permissionIds);
+            }
         }
 
         return redirect()->route('admin.roles.index')
@@ -105,7 +126,7 @@ class RoleController extends BaseController
         $role->load('permissions', 'users');
 
         return inertia('admin/roles/show', [
-            'role' => $role,
+            'role' => new RoleResource($role),
         ]);
     }
 
@@ -117,30 +138,50 @@ class RoleController extends BaseController
         $this->authorize('manage roles');
 
         $role->load('permissions');
+        // Get all permissions grouped by guard
         $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy('guard_name');
 
         return inertia('admin/roles/edit', [
-            'role' => $role,
-            'permissions' => $permissions,
+            'role' => new RoleResource($role),
+            'permissions' => $groupedPermissions,
         ]);
     }
 
     /**
      * Update the specified role in storage.
      */
-    public function update(Request $request, Role $role)
+    public function update(UpdateRoleRequest $request, Role $role)
     {
         $this->authorize('manage roles');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'permissions' => 'array|exists:permissions,name',
-        ]);
+        $validated = $request->validated();
 
         $role->update(['name' => $validated['name']]);
 
         if (isset($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+            // Handle permissions with guards
+            $permissionIds = [];
+            foreach ($validated['permissions'] as $guard => $perms) {
+                if (is_array($perms)) {
+                    foreach ($perms as $permissionName) {
+                        // Find the permission with the specific guard
+                        $permission = Permission::where('name', $permissionName)
+                            ->where('guard_name', $guard)
+                            ->first();
+                        if ($permission) {
+                            $permissionIds[] = $permission->id;
+                        }
+                        // If permission not found, we silently skip it to prevent errors
+                    }
+                }
+            }
+            // Only sync if we have valid permission IDs
+            if (!empty($permissionIds)) {
+                $role->syncPermissions($permissionIds);
+            } else {
+                $role->syncPermissions([]);
+            }
         } else {
             $role->syncPermissions([]);
         }

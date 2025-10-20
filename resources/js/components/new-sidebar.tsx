@@ -225,12 +225,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                                                         >
                                                                             <SidebarMenuSubButton
                                                                                 asChild
-                                                                                className="opacity-50 hover:bg-transparent hover:opacity-100 data-[state=open]:bg-accent/50 space-x-2"
+                                                                                className="space-x-2 opacity-50 hover:bg-transparent hover:opacity-100 data-[state=open]:bg-accent/50"
                                                                             >
                                                                                 <Link
                                                                                     href={
                                                                                         subItem.url
                                                                                     }
+                                                                                    prefetch
                                                                                     className={
                                                                                         isSubItemActive
                                                                                             ? 'text-primary'
@@ -260,10 +261,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton
                                                 asChild
-                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto data-[state=open]:bg-accent/50 space-x-2"
+                                                className="group/menu-button h-9 gap-3 space-x-2 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 data-[state=open]:bg-accent/50 [&>svg]:size-auto"
                                                 isActive={isActive}
                                             >
-                                                <Link href={item.url}>
+                                                <Link href={item.url} prefetch>
                                                     {item.icon && (
                                                         <item.icon
                                                             className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"
@@ -302,10 +303,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton
                                                 asChild
-                                                className="group/menu-button h-9 gap-3 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 [&>svg]:size-auto data-[state=open]:bg-accent/50 space-x-2"
+                                                className="group/menu-button h-9 gap-3 space-x-2 rounded-md bg-gradient-to-r font-medium hover:bg-transparent hover:from-sidebar-accent hover:to-sidebar-accent/40 data-[active=true]:from-primary/20 data-[active=true]:to-primary/5 data-[state=open]:bg-accent/50 [&>svg]:size-auto"
                                                 isActive={isActive}
                                             >
-                                                <Link href={item.url}>
+                                                <Link href={item.url} prefetch>
                                                     {item.icon && (
                                                         <item.icon
                                                             className="text-muted-foreground/60 group-data-[active=true]/menu-button:text-primary"

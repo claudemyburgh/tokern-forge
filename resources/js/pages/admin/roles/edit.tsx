@@ -1,4 +1,3 @@
-import roles from '@/routes/admin/roles';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,14 +6,17 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { RiArrowLeftLine } from '@remixicon/react';
+import { useEffect, useState } from 'react';
 
 interface Permission {
     id: number;
     name: string;
+    guard_name: string;
 }
 
 interface Role {
@@ -25,17 +27,19 @@ interface Role {
 
 interface EditRolePageProps {
     role: Role;
-    permissions: Permission[];
+    permissions: {
+        [key: string]: Permission[];
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Administration',
-        href: '#',
+        href: '/admin',
     },
     {
         title: 'Roles',
-        href: roles.index.url(),
+        href: '/admin/roles',
     },
     {
         title: 'Edit',
@@ -44,21 +48,53 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EditRole({ role, permissions }: EditRolePageProps) {
+    // Initialize form data with permissions grouped by guard
+    const initializePermissions = () => {
+        const initialPermissions: { [key: string]: string[] } = {};
+        
+        // Initialize all guards with empty arrays first
+        if (permissions) {
+            Object.keys(permissions).forEach(guard => {
+                initialPermissions[guard] = [];
+            });
+        }
+        
+        // Then populate with the role's permissions
+        if (role && role.permissions) {
+            role.permissions.forEach(permission => {
+                if (permission.guard_name && initialPermissions[permission.guard_name]) {
+                    if (!initialPermissions[permission.guard_name].includes(permission.name)) {
+                        initialPermissions[permission.guard_name].push(permission.name);
+                    }
+                }
+            });
+        }
+        
+        return initialPermissions;
+    };
+
     const { data, setData, put, processing, errors } = useForm({
-        name: role.name,
-        permissions: role.permissions.map(permission => permission.name),
+        name: role?.name || '',
+        permissions: initializePermissions(),
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(roles.update.url({ role: role.id }));
+        put(`/admin/roles/${role.id}`);
     };
 
-    const togglePermission = (permissionName: string) => {
-        if (data.permissions.includes(permissionName)) {
-            setData('permissions', data.permissions.filter(id => id !== permissionName));
+    const togglePermission = (guard: string, permissionName: string) => {
+        const currentPermissions = data.permissions[guard] || [];
+        if (currentPermissions.includes(permissionName)) {
+            setData('permissions', {
+                ...data.permissions,
+                [guard]: currentPermissions.filter(name => name !== permissionName)
+            });
         } else {
-            setData('permissions', [...data.permissions, permissionName]);
+            setData('permissions', {
+                ...data.permissions,
+                [guard]: [...currentPermissions, permissionName]
+            });
         }
     };
 
@@ -78,7 +114,7 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={roles.index.url()}>
+                        <Link href="/admin/roles">
                             <RiArrowLeftLine className="mr-2 size-4" />
                             Back to Roles
                         </Link>
@@ -124,22 +160,29 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
                                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                     Assign Permissions
                                 </label>
-                                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                    {permissions.map((permission) => (
-                                        <div key={permission.id} className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id={`permission-${permission.id}`}
-                                                checked={data.permissions.includes(permission.name)}
-                                                onChange={() => togglePermission(permission.name)}
-                                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <label
-                                                htmlFor={`permission-${permission.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                            >
-                                                {permission.name}
-                                            </label>
+                                <div className="mt-2 space-y-4">
+                                    {Object.entries(permissions).map(([guard, guardPermissions]) => (
+                                        <div key={guard} className="border rounded-lg p-4">
+                                            <h3 className="text-lg font-medium mb-2 capitalize">
+                                                {guard} Permissions
+                                            </h3>
+                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                                                {guardPermissions.map((permission) => (
+                                                    <div key={`${guard}-${permission.id}`} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`permission-${guard}-${permission.id}`}
+                                                            checked={data.permissions[guard]?.includes(permission.name) || false}
+                                                            onCheckedChange={() => togglePermission(guard, permission.name)}
+                                                        />
+                                                        <label
+                                                            htmlFor={`permission-${guard}-${permission.id}`}
+                                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                        >
+                                                            {permission.name}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -147,7 +190,7 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
 
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" asChild>
-                                    <Link href={roles.index.url()}>
+                                    <Link href="/admin/roles">
                                         Cancel
                                     </Link>
                                 </Button>

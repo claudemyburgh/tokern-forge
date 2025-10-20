@@ -1,4 +1,4 @@
-import users from '@/routes/admin/users';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -21,7 +21,15 @@ interface User {
     id: number;
     name: string;
     email: string;
+    bio?: string;
+    avatar?: string;
+    avatar_small?: string;
+    is_super_admin?: boolean;
     roles: Role[];
+    permissions?: string[];
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string;
 }
 
 interface EditUserPageProps {
@@ -36,7 +44,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Users',
-        href: users.index.url(),
+        href: '/admin/users',
     },
     {
         title: 'Edit',
@@ -46,21 +54,21 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function EditUser({ user, roles }: EditUserPageProps) {
     const { data, setData, put, processing, errors } = useForm({
-        name: user.name,
-        email: user.email,
+        name: user.name || '',
+        email: user.email || '',
         password: '',
         password_confirmation: '',
-        roles: user.roles.map(role => role.name),
+        roles: user.roles ? user.roles.map((role: { id: number; name: string }) => role.name) : [],
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(users.update.url({ user: user.id }));
+        put(`/admin/users/${user.id}`);
     };
 
     const toggleRole = (roleName: string) => {
         if (data.roles.includes(roleName)) {
-            setData('roles', data.roles.filter(id => id !== roleName));
+            setData('roles', data.roles.filter((name) => name !== roleName));
         } else {
             setData('roles', [...data.roles, roleName]);
         }
@@ -78,7 +86,7 @@ export default function EditUser({ user, roles }: EditUserPageProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={users.index.url()}>
+                        <Link href="/admin/users">
                             <RiArrowLeftLine className="mr-2 size-4" />
                             Back to Users
                         </Link>
@@ -166,29 +174,33 @@ export default function EditUser({ user, roles }: EditUserPageProps) {
                                     Assign Roles
                                 </label>
                                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                    {roles.map((role) => (
-                                        <div key={role.id} className="flex items-center space-x-2">
-                                            <input
-                                                type="checkbox"
-                                                id={`role-${role.id}`}
-                                                checked={data.roles.includes(role.name)}
-                                                onChange={() => toggleRole(role.name)}
-                                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                                            />
-                                            <label
-                                                htmlFor={`role-${role.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                            >
-                                                {role.name}
-                                            </label>
-                                        </div>
-                                    ))}
+                                    {roles && roles.length > 0 ? (
+                                        roles.map((role) => (
+                                            <div key={role.id} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`role-${role.id}`}
+                                                    checked={data.roles?.includes(role.name) || false}
+                                                    onChange={() => toggleRole(role.name)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                />
+                                                <label
+                                                    htmlFor={`role-${role.id}`}
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    {role.name}
+                                                </label>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">No roles available</p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" asChild>
-                                    <Link href={users.index.url()}>
+                                    <Link href="/admin/users">
                                         Cancel
                                     </Link>
                                 </Button>

@@ -1,3 +1,4 @@
+// Removed Wayfinder import - using hardcoded URLs instead
 import { EnhancedTable } from '@/components/enhanced-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import permissions from '@/routes/admin/permissions';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
@@ -24,6 +24,7 @@ interface Role {
 interface Permission {
     id: number;
     name: string;
+    guard_name: string;
     roles: Role[];
     created_at: string;
     updated_at: string;
@@ -47,7 +48,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Permissions',
-        href: permissions.index.url(),
+        href: '/admin/permissions',
     },
 ];
 
@@ -97,6 +98,18 @@ export default function PermissionsIndex({
             header: 'Name',
         },
         {
+            accessorKey: 'guard_name',
+            header: 'Guard',
+            cell: ({ row }) => {
+                const guard = row.original.guard_name;
+                return (
+                    <Badge variant={guard === 'web' ? 'default' : 'secondary'}>
+                        {guard}
+                    </Badge>
+                );
+            },
+        },
+        {
             accessorKey: 'roles',
             header: 'Assigned Roles',
             cell: ({ row }) => {
@@ -135,7 +148,7 @@ export default function PermissionsIndex({
                         </p>
                     </div>
                     <Button asChild>
-                        <Link href={permissions.create.url()}>
+                        <Link href="/admin/permissions/create">
                             <RiAddLine className="h-4 w-4" />
                             Add Permission
                         </Link>
@@ -165,10 +178,10 @@ export default function PermissionsIndex({
                                 onDelete={handleBulkDelete}
                                 loading={loading}
                                 actions={{
-                                    view: (id: string) => permissions.show.url({ permission: id }),
-                                    edit: (id: string) => permissions.edit.url({ permission: id }),
+                                    view: (id: string) => `/admin/permissions/${id}`,
+                                    edit: (id: string) => `/admin/permissions/${id}/edit`,
                                     delete: (id: string) => {
-                                        router.delete(permissions.destroy.url({ permission: id }), {
+                                        router.delete(`/admin/permissions/${id}`, {
                                             preserveState: true,
                                             preserveScroll: true,
                                         });

@@ -1,4 +1,4 @@
-import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -30,7 +30,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Permissions',
-        href: PermissionController.index.url(),
+        href: '/admin/permissions',
     },
     {
         title: 'Edit Permission',
@@ -45,7 +45,7 @@ export default function EditPermission({ permission }: EditPermissionPageProps) 
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(PermissionController.update.url({ permission: permission.id }));
+        put(`/admin/permissions/${permission.id}`);
     };
 
     // Core permissions that cannot be edited
@@ -74,7 +74,7 @@ export default function EditPermission({ permission }: EditPermissionPageProps) 
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={PermissionController.index.url()}>
+                        <Link href="/admin/permissions">
                             <RiArrowLeftLine className="mr-2 h-4 w-4" />
                             Back to Permissions
                         </Link>
@@ -116,7 +116,7 @@ export default function EditPermission({ permission }: EditPermissionPageProps) 
 
                                     <div className="flex justify-end gap-2">
                                         <Button variant="outline" asChild>
-                                            <Link href={PermissionController.index.url()}>
+                                            <Link href="/admin/permissions">
                                                 Cancel
                                             </Link>
                                         </Button>

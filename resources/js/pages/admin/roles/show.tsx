@@ -1,4 +1,3 @@
-import roles from '@/routes/admin/roles';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -32,11 +31,11 @@ interface ShowRolePageProps {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Administration',
-        href: '#',
+        href: '/admin',
     },
     {
         title: 'Roles',
-        href: roles.index.url(),
+        href: '/admin/roles',
     },
     {
         title: 'View',
@@ -71,13 +70,13 @@ export default function ShowRole({ role }: ShowRolePageProps) {
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={roles.index.url()}>
+                            <Link href="/admin/roles">
                                 <RiArrowLeftLine className="mr-2 h-4 w-4" />
                                 Back to Roles
                             </Link>
                         </Button>
                         <Button asChild>
-                            <Link href={roles.edit.url({ role: role.id })}>
+                            <Link href={`/admin/roles/${role.id}/edit`}>
                                 <RiEditLine className="mr-2 h-4 w-4" />
                                 Edit Role
                             </Link>

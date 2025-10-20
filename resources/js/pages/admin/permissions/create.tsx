@@ -1,4 +1,4 @@
-import PermissionController from '@/actions/App/Http/Controllers/Admin/PermissionController';
+// Removed Wayfinder import - using hardcoded URLs instead
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,6 +7,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -16,6 +17,7 @@ import { RiArrowLeftLine } from '@remixicon/react';
 
 interface CreatePermissionForm {
     name: string;
+    guards: string[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -25,22 +27,31 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Permissions',
-        href: PermissionController.index.url(),
+        href: '/admin/permissions',
     },
     {
         title: 'Create Permission',
-        href: PermissionController.create.url(),
+        href: '/admin/permissions/create',
     },
 ];
 
 export default function CreatePermission() {
     const { data, setData, post, processing, errors } = useForm<CreatePermissionForm>({
         name: '',
+        guards: ['web'], // Default to web guard
     });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(PermissionController.store.url());
+        post('/admin/permissions');
+    };
+
+    const toggleGuard = (guard: string) => {
+        if (data.guards.includes(guard)) {
+            setData('guards', data.guards.filter(g => g !== guard));
+        } else {
+            setData('guards', [...data.guards, guard]);
+        }
     };
 
     return (
@@ -55,7 +66,7 @@ export default function CreatePermission() {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={PermissionController.index.url()}>
+                        <Link href="/admin/permissions">
                             <RiArrowLeftLine className="mr-2 h-4 w-4" />
                             Back to Permissions
                         </Link>
@@ -85,9 +96,44 @@ export default function CreatePermission() {
                                     )}
                                 </div>
 
+                                <div className="space-y-2">
+                                    <Label>Guards</Label>
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="web-guard"
+                                                checked={data.guards.includes('web')}
+                                                onCheckedChange={() => toggleGuard('web')}
+                                            />
+                                            <label
+                                                htmlFor="web-guard"
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                Web
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="api-guard"
+                                                checked={data.guards.includes('api')}
+                                                onCheckedChange={() => toggleGuard('api')}
+                                            />
+                                            <label
+                                                htmlFor="api-guard"
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                API
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Select which authentication guards this permission should be available for.
+                                    </p>
+                                </div>
+
                                 <div className="flex justify-end gap-2">
                                     <Button variant="outline" asChild>
-                                        <Link href={PermissionController.index.url()}>
+                                        <Link href="/admin/permissions">
                                             Cancel
                                         </Link>
                                     </Button>

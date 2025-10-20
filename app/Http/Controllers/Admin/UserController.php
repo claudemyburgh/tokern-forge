@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\BaseController;
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Http\Resources\Users\UserCollection;
+use App\Http\Resources\Users\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
-use App\Http\Resources\Users\UserCollection;
 
 class UserController extends BaseController
 {
@@ -52,6 +55,7 @@ class UserController extends BaseController
             case 'all':
                 $query->withTrashed(); // Explicitly include trashed records
                 break;
+            case 'withoutTrash':
             default:
                 // Default behavior - only active records
                 break;
@@ -84,16 +88,11 @@ class UserController extends BaseController
     /**
      * Store a newly created user in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
         $this->authorize('manage users');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'roles' => 'array|exists:roles,name',
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -119,7 +118,7 @@ class UserController extends BaseController
         $user->load('roles', 'permissions');
 
         return inertia('admin/users/show', [
-            'user' => $user,
+            'user' => UserResource::make($user),
         ]);
     }
 
@@ -134,7 +133,7 @@ class UserController extends BaseController
         $roles = Role::all();
 
         return inertia('admin/users/edit', [
-            'user' => $user,
+            'user' => UserResource::make($user),
             'roles' => $roles,
         ]);
     }
@@ -142,16 +141,11 @@ class UserController extends BaseController
     /**
      * Update the specified user in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
         $this->authorize('manage users');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'roles' => 'array|exists:roles,name',
-        ]);
+        $validated = $request->validated();
 
         $user->update([
             'name' => $validated['name'],
@@ -230,9 +224,12 @@ class UserController extends BaseController
     /**
      * Restore a single user from storage.
      */
-    public function restoreSingle(User $user)
+    public function restoreSingle($user)
     {
         $this->authorize('manage users');
+
+        // Explicitly find the user including trashed models
+        $user = User::withTrashed()->findOrFail($user);
 
         if ($user->trashed()) {
             $user->restore();
@@ -245,9 +242,12 @@ class UserController extends BaseController
     /**
      * Force delete a single user from storage.
      */
-    public function forceDeleteSingle(User $user)
+    public function forceDeleteSingle($user)
     {
         $this->authorize('manage users');
+
+        // Explicitly find the user including trashed models
+        $user = User::withTrashed()->findOrFail($user);
 
         // Prevent users from force deleting themselves
         if ($user->id === Auth::id()) {
@@ -265,7 +265,7 @@ class UserController extends BaseController
     /**
      * Restore the specified user(s) from storage.
      */
-    public function restore($ids = null, Request $request)
+    public function restore(Request $request, $ids = null)
     {
         $this->authorize('manage users');
 
@@ -280,7 +280,6 @@ class UserController extends BaseController
 
         // Filter out null values
         $ids = array_filter($ids);
-
 
         if (empty($ids)) {
             return redirect()->route('admin.users.index')
@@ -309,7 +308,7 @@ class UserController extends BaseController
     /**
      * Force delete the specified user(s) from storage.
      */
-    public function forceDelete($ids = null, Request $request)
+    public function forceDelete(Request $request, $ids = null)
     {
         $this->authorize('manage users');
 
@@ -325,44 +324,32 @@ class UserController extends BaseController
         // Filter out null values
         $ids = array_filter($ids);
 
+        // Prevent users from force deleting themselves
+        $ids = array_filter($ids, function ($id) {
+            return $id != Auth::id();
+        });
+
         if (empty($ids)) {
             return redirect()->route('admin.users.index')
-                ->with('error', 'No users selected for force deletion.');
+                ->with('error', 'No users selected for force deletion or you tried to delete yourself.');
         }
 
-        // Prevent users from force deleting themselves
-        $usersToDelete = User::withTrashed()->whereIn('id', $ids)->get();
-        $deletableUsers = [];
-        $protectedUsers = [];
+        $usersToForceDelete = User::withTrashed()->whereIn('id', $ids)->get();
+        $forceDeletedUsers = [];
 
-        foreach ($usersToDelete as $user) {
-            if ($user->id === Auth::id()) {
-                $protectedUsers[] = $user->name;
-            } else {
-                $deletableUsers[] = $user->id;
+        foreach ($usersToForceDelete as $user) {
+            if ($user->trashed()) {
+                $user->forceDelete();
+                $forceDeletedUsers[] = $user->id;
             }
         }
 
-        if (!empty($deletableUsers)) {
-            User::withTrashed()->whereIn('id', $deletableUsers)->forceDelete();
-        }
-
-        if (!empty($protectedUsers)) {
-            if (count($protectedUsers) == 1) {
-                return redirect()->route('admin.users.index')
-                    ->with('error', 'You cannot force delete yourself.');
-            } else {
-                return redirect()->route('admin.users.index')
-                    ->with('error', 'Cannot force delete protected users: ' . implode(', ', $protectedUsers) . '.');
-            }
-        }
-
-        if (count($deletableUsers) == 1) {
+        if (count($forceDeletedUsers) == 1) {
             return redirect()->route('admin.users.index')
                 ->with('success', 'User force deleted successfully.');
         } else {
             return redirect()->route('admin.users.index')
-                ->with('success', count($deletableUsers) . ' users force deleted successfully.');
+                ->with('success', count($forceDeletedUsers) . ' users force deleted successfully.');
         }
     }
 }

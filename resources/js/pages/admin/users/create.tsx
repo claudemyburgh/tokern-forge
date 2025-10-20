@@ -1,4 +1,3 @@
-import users from '@/routes/admin/users';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -28,7 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Users',
-        href: users.index.url(),
+        href: '/admin/users',
     },
     {
         title: 'Create',
@@ -47,7 +46,7 @@ export default function CreateUser({ roles }: CreateUserPageProps) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(users.store.url());
+        post('/admin/users');
     };
 
     const toggleRole = (roleName: string) => {
@@ -70,7 +69,7 @@ export default function CreateUser({ roles }: CreateUserPageProps) {
                         </p>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href={users.index.url()}>
+                        <Link href="/admin/users">
                             <RiArrowLeftLine className="mr-2 size-4" />
                             Back to Users
                         </Link>
@@ -180,7 +179,7 @@ export default function CreateUser({ roles }: CreateUserPageProps) {
 
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" asChild>
-                                    <Link href={users.index.url()}>
+                                    <Link href="/admin/users">
                                         Cancel
                                     </Link>
                                 </Button>

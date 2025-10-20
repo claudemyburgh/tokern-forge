@@ -9,7 +9,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import roles from '@/routes/admin/roles';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
@@ -19,6 +18,7 @@ import { useState } from 'react';
 interface Permission {
     id: number;
     name: string;
+    guard_name: string;
 }
 
 interface Role {
@@ -43,11 +43,11 @@ interface RolesPageProps {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Administration',
-        href: '#',
+        href: '/admin',
     },
     {
         title: 'Roles',
-        href: roles.index.url(),
+        href: '/admin/roles',
     },
 ];
 
@@ -55,11 +55,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 const coreRoles = ['super-admin'];
 
 // Since roles don't have soft deletes, we only show relevant filter options
-const filterOptions = [
-    { key: 'all', label: 'All Records' },
-];
+const filterOptions = [{ key: 'all', label: 'All Records' }];
 
-export default function RolesIndex({ 
+export default function RolesIndex({
     roles: pageRoles,
     filter,
     perPage,
@@ -97,7 +95,7 @@ export default function RolesIndex({
                         {permissions.length > 0 ? (
                             permissions.map((permission) => (
                                 <Badge key={permission.id} variant="secondary">
-                                    {permission.name}
+                                    {permission.name} ({permission.guard_name})
                                 </Badge>
                             ))
                         ) : (
@@ -109,8 +107,18 @@ export default function RolesIndex({
                 );
             },
         },
-        // Actions column is automatically added by EnhancedTable component
     ];
+
+    const actions = {
+        view: (id: string) => `/admin/roles/${id}`,
+        edit: (id: string) => `/admin/roles/${id}/edit`,
+        delete: (id: string) => {
+            router.delete(`/admin/roles/${id}`, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        },
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -124,7 +132,7 @@ export default function RolesIndex({
                         </p>
                     </div>
                     <Button asChild>
-                        <Link href={roles.create.url()}>
+                        <Link href="/admin/roles/create">
                             <RiAddLine className="h-4 w-4" />
                             Add Role
                         </Link>
@@ -153,16 +161,7 @@ export default function RolesIndex({
                                 searchPlaceholder="Search roles..."
                                 onDelete={handleBulkDelete}
                                 loading={loading}
-                                actions={{
-                                    view: (id: string) => roles.show.url({ role: id }),
-                                    edit: (id: string) => roles.edit.url({ role: id }),
-                                    delete: (id: string) => {
-                                        router.delete(roles.destroy.url({ role: id }), {
-                                            preserveState: true,
-                                            preserveScroll: true,
-                                        });
-                                    }
-                                }}
+                                actions={actions}
                             />
                         </CardContent>
                     </Card>
