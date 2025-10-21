@@ -8,6 +8,13 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PermissionResource extends JsonResource
 {
     /**
+     * Indicates if the resource should be wrapped in an array.
+     *
+     * @var bool
+     */
+    public static $wrap = false;
+
+    /**
      * Transform the resource into an array.
      *
      * @return array<string, mixed>

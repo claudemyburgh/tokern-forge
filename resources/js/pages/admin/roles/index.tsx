@@ -24,6 +24,7 @@ interface Permission {
 interface Role {
     id: number;
     name: string;
+    guards: string[];
     permissions: Permission[];
     created_at: string;
     updated_at: string;
@@ -86,6 +87,22 @@ export default function RolesIndex({
             header: 'Name',
         },
         {
+            accessorKey: 'guards',
+            header: 'Guards',
+            cell: ({ row }) => {
+                const guards = row.original.guards;
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {guards.map((guard: string) => (
+                            <Badge key={guard} variant="secondary">
+                                {guard}
+                            </Badge>
+                        ))}
+                    </div>
+                );
+            },
+        },
+        {
             accessorKey: 'permissions',
             header: 'Permissions',
             cell: ({ row }) => {
@@ -95,7 +112,7 @@ export default function RolesIndex({
                         {permissions.length > 0 ? (
                             permissions.map((permission) => (
                                 <Badge key={permission.id} variant="secondary">
-                                    {permission.name} ({permission.guard_name})
+                                    {permission.name}
                                 </Badge>
                             ))
                         ) : (
@@ -128,7 +145,7 @@ export default function RolesIndex({
                     <div>
                         <h1 className="text-2xl font-bold">Role Management</h1>
                         <p className="text-muted-foreground">
-                            Manage user roles and their permissions
+                            Manage user roles and their permissions across guards
                         </p>
                     </div>
                     <Button asChild>
@@ -144,7 +161,7 @@ export default function RolesIndex({
                         <CardHeader>
                             <CardTitle>All Roles</CardTitle>
                             <CardDescription>
-                                List of all roles in the system
+                                List of all roles in the system (grouped by name)
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

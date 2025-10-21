@@ -25,6 +25,7 @@ class StoreRoleRequest extends FormRequest
             'name' => 'required|string|max:255|unique:roles',
             'permissions' => 'array',
             'permissions.*' => 'array',
+            'permissions.*.*' => 'string',
         ];
     }
 }

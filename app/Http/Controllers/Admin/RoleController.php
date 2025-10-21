@@ -34,8 +34,9 @@ class RoleController extends BaseController
             $validPage = 1;
         }
 
+        // Get all roles and group them by name
         $query = Role::with('permissions');
-
+        
         // Apply search filter
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -43,19 +44,60 @@ class RoleController extends BaseController
             });
         }
 
-        // Roles don't have soft deletes, so we only support basic filtering
-        // The 'all' filter is the only relevant option since there are no trashed records
-        switch ($filter) {
-            case 'all':
-            default:
-                // Default behavior - all records
-                break;
+        $allRoles = $query->get();
+        
+        // Group roles by name
+        $groupedRoles = $allRoles->groupBy('name');
+        
+        // Create a collection of merged roles for display
+        $mergedRoles = [];
+        foreach ($groupedRoles as $name => $roles) {
+            // Take the first role as the base
+            $baseRole = $roles->first();
+            
+            // Create a merged representation
+            $mergedRole = [
+                'id' => $baseRole->id,
+                'name' => $name,
+                'guards' => $roles->pluck('guard_name')->toArray(),
+                'permissions' => $roles->flatMap->permissions->unique('id')->values()->all(),
+                'created_at' => $baseRole->created_at,
+                'updated_at' => $baseRole->updated_at,
+            ];
+            
+            $mergedRoles[] = $mergedRole;
         }
-
-        $roles = $query->latest()->paginate($validPerPage, ['*'], 'page', $validPage);
+        
+        // Convert to a paginated collection for the view
+        $currentPage = $validPage;
+        $perPageValue = $validPerPage;
+        $offset = ($currentPage - 1) * $perPageValue;
+        $paginatedRoles = array_slice($mergedRoles, $offset, $perPageValue);
+        
+        $roles = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedRoles,
+            count($mergedRoles),
+            $perPageValue,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+            ]
+        );
 
         return inertia('admin/roles/index', [
-            'roles' => new RoleCollection($roles),
+            'roles' => [
+                'data' => $paginatedRoles,
+                'links' => [],
+                'meta' => [
+                    'current_page' => $currentPage,
+                    'last_page' => $roles->lastPage(),
+                    'from' => $offset + 1,
+                    'to' => $offset + count($paginatedRoles),
+                    'total' => count($mergedRoles),
+                    'per_page' => $perPageValue,
+                ],
+            ],
             'filter' => $filter,
             'perPage' => $validPerPage,
             'search' => $search,
@@ -123,10 +165,24 @@ class RoleController extends BaseController
     {
         $this->authorize('manage roles');
 
-        $role->load('permissions', 'users');
+        // Get all roles with the same name (across different guards)
+        $allRoles = Role::where('name', $role->name)->with('permissions')->get();
+        
+        // Merge permissions from all guards
+        $allPermissions = $allRoles->flatMap->permissions->unique('id')->values()->all();
+        
+        // Prepare data for the view
+        $mergedRole = [
+            'id' => $role->id,
+            'name' => $role->name,
+            'guards' => $allRoles->pluck('guard_name')->toArray(),
+            'permissions' => $allPermissions,
+            'created_at' => $role->created_at,
+            'updated_at' => $role->updated_at,
+        ];
 
         return inertia('admin/roles/show', [
-            'role' => new RoleResource($role),
+            'role' => $mergedRole,
         ]);
     }
 
@@ -137,13 +193,22 @@ class RoleController extends BaseController
     {
         $this->authorize('manage roles');
 
-        $role->load('permissions');
+        // Get all roles with the same name (across different guards)
+        $allRoles = Role::where('name', $role->name)->with('permissions')->get();
+        
         // Get all permissions grouped by guard
         $permissions = Permission::all();
         $groupedPermissions = $permissions->groupBy('guard_name');
 
         return inertia('admin/roles/edit', [
-            'role' => new RoleResource($role),
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'guards' => $allRoles->pluck('guard_name')->toArray(),
+                'permissions' => $allRoles->flatMap->permissions->groupBy('guard_name')->map(function ($guardPermissions) {
+                    return $guardPermissions->pluck('name');
+                })->toArray(),
+            ],
             'permissions' => $groupedPermissions,
         ]);
     }
@@ -157,14 +222,27 @@ class RoleController extends BaseController
 
         $validated = $request->validated();
 
-        $role->update(['name' => $validated['name']]);
+        // Get all roles with the same name (across different guards)
+        $allRoles = Role::where('name', $role->name)->get();
 
+        // Update the name for all roles with the same name
+        if (isset($validated['name'])) {
+            foreach ($allRoles as $r) {
+                $r->update(['name' => $validated['name']]);
+            }
+            // Update the main role reference
+            $role->refresh();
+        }
+
+        // Handle permissions for each guard
         if (isset($validated['permissions'])) {
-            // Handle permissions with guards
-            $permissionIds = [];
-            foreach ($validated['permissions'] as $guard => $perms) {
-                if (is_array($perms)) {
-                    foreach ($perms as $permissionName) {
+            foreach ($allRoles as $r) {
+                $guard = $r->guard_name;
+                $permissionIds = [];
+                
+                // Get permissions for this specific guard
+                if (isset($validated['permissions'][$guard]) && is_array($validated['permissions'][$guard])) {
+                    foreach ($validated['permissions'][$guard] as $permissionName) {
                         // Find the permission with the specific guard
                         $permission = Permission::where('name', $permissionName)
                             ->where('guard_name', $guard)
@@ -172,22 +250,21 @@ class RoleController extends BaseController
                         if ($permission) {
                             $permissionIds[] = $permission->id;
                         }
-                        // If permission not found, we silently skip it to prevent errors
                     }
                 }
-            }
-            // Only sync if we have valid permission IDs
-            if (!empty($permissionIds)) {
-                $role->syncPermissions($permissionIds);
-            } else {
-                $role->syncPermissions([]);
+                
+                // Sync permissions for this role
+                $r->syncPermissions($permissionIds);
             }
         } else {
-            $role->syncPermissions([]);
+            // If no permissions provided, clear all permissions
+            foreach ($allRoles as $r) {
+                $r->syncPermissions([]);
+            }
         }
 
         return redirect()->route('admin.roles.index')
-            ->with('success', 'Role updated successfully.');
+            ->with('success', 'Role updated successfully across all guards.');
     }
 
     /**
@@ -205,20 +282,20 @@ class RoleController extends BaseController
         } else {
             $ids = [$ids];
         }
-        
+
         // Filter out null values
         $ids = array_filter($ids);
-        
+
         if (empty($ids)) {
             return redirect()->route('admin.roles.index')
                 ->with('error', 'No roles selected for deletion.');
         }
-        
+
         // Prevent deletion of super-admin role
         $rolesToDelete = \Spatie\Permission\Models\Role::whereIn('id', $ids)->get();
         $deletableRoles = [];
         $protectedRoles = [];
-        
+
         foreach ($rolesToDelete as $role) {
             if ($role->name === 'super-admin') {
                 $protectedRoles[] = $role->name;
@@ -226,11 +303,11 @@ class RoleController extends BaseController
                 $deletableRoles[] = $role->id;
             }
         }
-        
+
         if (!empty($deletableRoles)) {
             \Spatie\Permission\Models\Role::whereIn('id', $deletableRoles)->delete();
         }
-        
+
         if (!empty($protectedRoles)) {
             if (count($protectedRoles) == 1) {
                 return redirect()->route('admin.roles.index')
@@ -240,7 +317,7 @@ class RoleController extends BaseController
                     ->with('error', 'Protected roles cannot be deleted: ' . implode(', ', $protectedRoles) . '.');
             }
         }
-        
+
         if (count($deletableRoles) == 1) {
             return redirect()->route('admin.roles.index')
                 ->with('success', 'Role deleted successfully.');

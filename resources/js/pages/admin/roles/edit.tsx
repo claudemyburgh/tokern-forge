@@ -22,7 +22,10 @@ interface Permission {
 interface Role {
     id: number;
     name: string;
-    permissions: Permission[];
+    guards: string[];
+    permissions: {
+        [key: string]: string[];
+    };
 }
 
 interface EditRolePageProps {
@@ -61,11 +64,9 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
         
         // Then populate with the role's permissions
         if (role && role.permissions) {
-            role.permissions.forEach(permission => {
-                if (permission.guard_name && initialPermissions[permission.guard_name]) {
-                    if (!initialPermissions[permission.guard_name].includes(permission.name)) {
-                        initialPermissions[permission.guard_name].push(permission.name);
-                    }
+            Object.entries(role.permissions).forEach(([guard, permissionNames]) => {
+                if (initialPermissions[guard]) {
+                    initialPermissions[guard] = [...permissionNames];
                 }
             });
         }
@@ -110,7 +111,7 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
                     <div>
                         <h1 className="text-2xl font-bold">Edit Role</h1>
                         <p className="text-muted-foreground">
-                            Modify the role details
+                            Modify the role details for all guards: {role.guards?.join(', ')}
                         </p>
                     </div>
                     <Button variant="outline" asChild>
@@ -123,9 +124,9 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Edit Role</CardTitle>
+                        <CardTitle>Edit Role: {role.name}</CardTitle>
                         <CardDescription>
-                            Update the details for the role "{role.name}"
+                            Update the details for the role "{role.name}" across all guards
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

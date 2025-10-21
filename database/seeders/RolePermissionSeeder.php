@@ -14,7 +14,10 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create permissions
+        // Define the guards
+        $guards = ['web', 'api'];
+        
+        // Create permissions for each guard
         $permissions = [
             'view tokens',
             'create tokens',
@@ -26,11 +29,16 @@ class RolePermissionSeeder extends Seeder
             'manage settings',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($guards as $guard) {
+            foreach ($permissions as $permission) {
+                Permission::firstOrCreate([
+                    'name' => $permission,
+                    'guard_name' => $guard,
+                ]);
+            }
         }
 
-        // Create roles
+        // Create roles for each guard
         $roles = [
             'super-admin' => $permissions, // Gets all permissions
             'admin' => [
@@ -46,14 +54,26 @@ class RolePermissionSeeder extends Seeder
             'free' => ['view tokens', 'manage settings'],
         ];
 
-        foreach ($roles as $roleName => $rolePermissions) {
-            $role = Role::firstOrCreate(['name' => $roleName]);
+        foreach ($guards as $guard) {
+            foreach ($roles as $roleName => $rolePermissions) {
+                $role = Role::firstOrCreate([
+                    'name' => $roleName,
+                    'guard_name' => $guard,
+                ]);
 
-            if ($roleName === 'super-admin') {
-                // Super admin gets all permissions
-                $role->givePermissionTo(Permission::all());
-            } else {
-                $role->givePermissionTo($rolePermissions);
+                // Get permission models for this specific guard
+                $guardPermissions = [];
+                foreach ($rolePermissions as $permission) {
+                    $permissionModel = Permission::where('name', $permission)
+                        ->where('guard_name', $guard)
+                        ->first();
+                    if ($permissionModel) {
+                        $guardPermissions[] = $permissionModel;
+                    }
+                }
+
+                // Assign permissions to role (clear any existing permissions first)
+                $role->syncPermissions($guardPermissions);
             }
         }
     }

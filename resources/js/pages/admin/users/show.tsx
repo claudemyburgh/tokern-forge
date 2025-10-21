@@ -1,4 +1,3 @@
-// Removed Wayfinder import - using hardcoded URLs instead
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,14 +17,25 @@ interface Role {
     name: string;
 }
 
+interface Permission {
+    id: number;
+    name: string;
+}
+
 interface User {
     id: number;
     name: string;
     email: string;
+    bio: string | null;
+    avatar: string;
+    avatar_small: string;
+    is_super_admin: boolean;
     roles: Role[];
+    permissions: string[];
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
 }
 
 interface ShowUserPageProps {
@@ -96,7 +106,9 @@ export default function ShowUser({ user }: ShowUserPageProps) {
                         <CardContent>
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
-                                    <h3 className="text-lg font-medium">Basic Information</h3>
+                                    <h3 className="text-lg font-medium">
+                                        Basic Information
+                                    </h3>
                                     <div className="mt-4 space-y-4">
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
@@ -104,41 +116,49 @@ export default function ShowUser({ user }: ShowUserPageProps) {
                                             </label>
                                             <p className="mt-1">{user.name}</p>
                                         </div>
-                                        
+
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Email
                                             </label>
                                             <p className="mt-1">{user.email}</p>
                                         </div>
-                                        
+
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Email Verified
                                             </label>
-                                            <p className="mt-1">{formatDate(user.email_verified_at)}</p>
+                                            <p className="mt-1">
+                                                {formatDate(user.email_verified_at)}
+                                            </p>
                                         </div>
-                                        
+
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Created At
                                             </label>
-                                            <p className="mt-1">{formatDate(user.created_at)}</p>
+                                            <p className="mt-1">
+                                                {formatDate(user.created_at)}
+                                            </p>
                                         </div>
-                                        
+
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
                                                 Last Updated
                                             </label>
-                                            <p className="mt-1">{formatDate(user.updated_at)}</p>
+                                            <p className="mt-1">
+                                                {formatDate(user.updated_at)}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div>
-                                    <h3 className="text-lg font-medium">Role Assignments</h3>
+                                    <h3 className="text-lg font-medium">
+                                        Role Assignments
+                                    </h3>
                                     <div className="mt-4">
-                                        {user.roles.length > 0 ? (
+                                        {user.roles && user.roles.length > 0 ? (
                                             <div className="flex flex-wrap gap-2">
                                                 {user.roles.map((role) => (
                                                     <Badge
@@ -152,6 +172,32 @@ export default function ShowUser({ user }: ShowUserPageProps) {
                                         ) : (
                                             <p className="text-muted-foreground">
                                                 This user has no roles assigned.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <h3 className="mt-6 text-lg font-medium">
+                                        Permissions
+                                    </h3>
+                                    <div className="mt-4">
+                                        {user.permissions &&
+                                        user.permissions.length > 0 ? (
+                                            <div className="flex flex-wrap gap-2">
+                                                {user.permissions.map(
+                                                    (permission, index) => (
+                                                        <Badge
+                                                            key={index}
+                                                            variant="outline"
+                                                        >
+                                                            {permission}
+                                                        </Badge>
+                                                    ),
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted-foreground">
+                                                This user has no specific
+                                                permissions assigned.
                                             </p>
                                         )}
                                     </div>

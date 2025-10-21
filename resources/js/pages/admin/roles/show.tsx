@@ -14,11 +14,13 @@ import { RiArrowLeftLine, RiEditLine } from '@remixicon/react';
 interface Permission {
     id: number;
     name: string;
+    guard_name: string;
 }
 
 interface Role {
     id: number;
     name: string;
+    guards: string[];
     permissions: Permission[];
     created_at: string;
     updated_at: string;
@@ -106,6 +108,15 @@ export default function ShowRole({ role }: ShowRolePageProps) {
                                         
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">
+                                                Guards
+                                            </label>
+                                            <p className="mt-1">
+                                                {role.guards.join(', ')}
+                                            </p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="text-sm font-medium text-muted-foreground">
                                                 Created At
                                             </label>
                                             <p className="mt-1">{formatDate(role.created_at)}</p>
@@ -130,7 +141,7 @@ export default function ShowRole({ role }: ShowRolePageProps) {
                                                         key={permission.id}
                                                         className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
                                                     >
-                                                        {permission.name}
+                                                        {permission.name} ({permission.guard_name})
                                                     </span>
                                                 ))}
                                             </div>

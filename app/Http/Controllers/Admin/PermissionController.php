@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\BaseController;
 use App\Http\Requests\Admin\StorePermissionRequest;
 use App\Http\Requests\Admin\UpdatePermissionRequest;
+use App\Http\Resources\Permissions\PermissionResource;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -125,7 +126,7 @@ class PermissionController extends BaseController
         $permission->load('roles');
         
         return inertia('admin/permissions/show', [
-            'permission' => $permission,
+            'permission' => new PermissionResource($permission),
         ]);
     }
 
