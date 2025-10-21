@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\BaseController;
+use App\Actions\Permission\CreatePermission;
+use App\Actions\Permission\DeletePermissions;
+use App\Actions\Permission\ListPermissions;
+use App\Actions\Permission\UpdatePermission;
 use App\Http\Requests\Admin\StorePermissionRequest;
 use App\Http\Requests\Admin\UpdatePermissionRequest;
+use App\Http\Resources\Permissions\PermissionCollection;
 use App\Http\Resources\Permissions\PermissionResource;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use App\Http\Resources\Permissions\PermissionCollection;
 
 class PermissionController extends BaseController
 {
@@ -18,47 +21,22 @@ class PermissionController extends BaseController
      */
     public function index(Request $request)
     {
-        $this->authorize('manage permissions');
+        $this->authorize('viewAny', Permission::class);
 
-        $filter = $request->query('filter', 'all');
-        $perPage = $request->query('perPage', 10);
-        $page = $request->query('page', 1);
-        $search = $request->query('search', '');
+        $filters = [
+            'filter' => $request->query('filter', 'all'),
+            'perPage' => $request->query('perPage', 10),
+            'page' => $request->query('page', 1),
+            'search' => $request->query('search', ''),
+        ];
 
-        // Validate perPage value
-        $validPerPage = in_array($perPage, [10, 20, 30, 40, 50]) ? $perPage : 10;
-
-        // Validate and cast page to integer
-        $validPage = is_numeric($page) ? (int) $page : 1;
-        if ($validPage < 1) {
-            $validPage = 1;
-        }
-
-        $query = Permission::with('roles');
-
-        // Apply search filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            });
-        }
-
-        // Permissions don't have soft deletes, so we only support basic filtering
-        // The 'all' filter is the only relevant option since there are no trashed records
-        switch ($filter) {
-            case 'all':
-            default:
-                // Default behavior - all records
-                break;
-        }
-
-        $permissions = $query->latest()->paginate($validPerPage, ['*'], 'page', $validPage);
+        $permissions = (new ListPermissions)->handle($filters);
 
         return inertia('admin/permissions/index', [
             'permissions' => new PermissionCollection($permissions),
-            'filter' => $filter,
-            'perPage' => $validPerPage,
-            'search' => $search,
+            'filter' => $filters['filter'],
+            'perPage' => $filters['perPage'],
+            'search' => $filters['search'],
         ]);
     }
 
@@ -67,10 +45,10 @@ class PermissionController extends BaseController
      */
     public function create()
     {
-        $this->authorize('manage permissions');
-        
+        $this->authorize('create', Permission::class);
+
         $roles = Role::all();
-        
+
         return inertia('admin/permissions/create', [
             'roles' => $roles,
         ]);
@@ -81,36 +59,11 @@ class PermissionController extends BaseController
      */
     public function store(StorePermissionRequest $request)
     {
-        $this->authorize('manage permissions');
-        
+        $this->authorize('create', Permission::class);
+
         $validated = $request->validated();
 
-        // Get the guards or default to web
-        $guards = $validated['guards'] ?? ['web'];
-        
-        // Create permissions for each selected guard
-        $createdPermissions = [];
-        foreach ($guards as $guard) {
-            // Check if permission already exists for this guard
-            $existingPermission = Permission::where('name', $validated['name'])
-                ->where('guard_name', $guard)
-                ->first();
-                
-            if (!$existingPermission) {
-                $permission = Permission::create([
-                    'name' => $validated['name'],
-                    'guard_name' => $guard
-                ]);
-                $createdPermissions[] = $permission;
-            }
-        }
-
-        // Assign roles to all created permissions
-        if (isset($validated['roles']) && !empty($createdPermissions)) {
-            foreach ($createdPermissions as $permission) {
-                $permission->assignRole($validated['roles']);
-            }
-        }
+        (new CreatePermission)->handle($validated);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission(s) created successfully.');
@@ -121,10 +74,10 @@ class PermissionController extends BaseController
      */
     public function show(Permission $permission)
     {
-        $this->authorize('manage permissions');
-        
+        $this->authorize('view', $permission);
+
         $permission->load('roles');
-        
+
         return inertia('admin/permissions/show', [
             'permission' => new PermissionResource($permission),
         ]);
@@ -135,11 +88,11 @@ class PermissionController extends BaseController
      */
     public function edit(Permission $permission)
     {
-        $this->authorize('manage permissions');
-        
+        $this->authorize('update', $permission);
+
         $permission->load('roles');
         $roles = Role::all();
-        
+
         return inertia('admin/permissions/edit', [
             'permission' => $permission,
             'roles' => $roles,
@@ -151,17 +104,11 @@ class PermissionController extends BaseController
      */
     public function update(UpdatePermissionRequest $request, Permission $permission)
     {
-        $this->authorize('manage permissions');
-        
+        $this->authorize('update', $permission);
+
         $validated = $request->validated();
 
-        $permission->update(['name' => $validated['name']]);
-
-        if (isset($validated['roles'])) {
-            $permission->syncRoles($validated['roles']);
-        } else {
-            $permission->syncRoles([]);
-        }
+        (new UpdatePermission)->handle($permission, $validated);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission updated successfully.');
@@ -170,62 +117,18 @@ class PermissionController extends BaseController
     /**
      * Remove the specified permission from storage.
      */
-    public function destroy($ids = null, Request $request)
+    public function destroy($ids, Request $request)
     {
-        $this->authorize('manage permissions');
-        
         // Handle bulk deletion with the exact pattern specified
         if ($request->has('ids')) {
             $ids = $request->input('ids');
-        } elseif ($ids && is_string($ids)) {
-            $ids = explode(',', $ids);
-        } else {
-            $ids = [$ids];
         }
-        
-        // Filter out null values
-        $ids = array_filter($ids);
-        
-        if (empty($ids)) {
-            return redirect()->route('admin.permissions.index')
-                ->with('error', 'No permissions selected for deletion.');
-        }
-        
-        // Prevent deletion of core permissions
-        $corePermissions = ['view tokens', 'create tokens', 'edit tokens', 'delete tokens', 'manage users', 'manage roles', 'manage permissions', 'manage settings'];
-        
-        $permissionsToDelete = \Spatie\Permission\Models\Permission::whereIn('id', $ids)->get();
-        $deletablePermissions = [];
-        $protectedPermissions = [];
-        
-        foreach ($permissionsToDelete as $permission) {
-            if (in_array($permission->name, $corePermissions)) {
-                $protectedPermissions[] = $permission->name;
-            } else {
-                $deletablePermissions[] = $permission->id;
-            }
-        }
-        
-        if (!empty($deletablePermissions)) {
-            \Spatie\Permission\Models\Permission::whereIn('id', $deletablePermissions)->delete();
-        }
-        
-        if (!empty($protectedPermissions)) {
-            if (count($protectedPermissions) == 1) {
-                return redirect()->route('admin.permissions.index')
-                    ->with('error', 'Core permission "' . $protectedPermissions[0] . '" cannot be deleted.');
-            } else {
-                return redirect()->route('admin.permissions.index')
-                    ->with('error', 'Core permissions cannot be deleted: ' . implode(', ', $protectedPermissions) . '.');
-            }
-        }
-        
-        if (count($deletablePermissions) == 1) {
-            return redirect()->route('admin.permissions.index')
-                ->with('success', 'Permission deleted successfully.');
-        } else {
-            return redirect()->route('admin.permissions.index')
-                ->with('success', count($deletablePermissions) . ' permissions deleted successfully.');
-        }
+
+        $this->authorize('deleteAny', Permission::class);
+
+        $result = (new DeletePermissions)->handle($ids);
+
+        return redirect()->route('admin.permissions.index')
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 }

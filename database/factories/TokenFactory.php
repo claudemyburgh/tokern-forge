@@ -25,7 +25,7 @@ class TokenFactory extends Factory
             'symbol' => Str::upper(substr($this->faker->name(), 0, 3)),
             'description' => $this->faker->text(),
             'decimals' => 9,
-            'supply' => 1000000000
+            'supply' => 1000000000,
         ];
     }
 }

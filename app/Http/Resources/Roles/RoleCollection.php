@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 class RoleCollection extends ResourceCollection
 {
     public $collects = RoleResource::class;
-    
+
     /**
      * Transform the resource collection into an array.
      *

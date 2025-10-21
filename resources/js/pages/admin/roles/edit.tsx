@@ -81,6 +81,10 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        // Prevent submission for core roles only when trying to change the name
+        if (isCoreRole && data.name !== role.name) {
+            return;
+        }
         put(`/admin/roles/${role.id}`);
     };
 
@@ -133,7 +137,7 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
                         {isCoreRole && (
                             <div className="mb-4 rounded-md bg-yellow-50 p-4">
                                 <p className="text-sm text-yellow-800">
-                                    This is a core role and cannot be renamed. You can only modify permission assignments.
+                                    This is a core role. The role name cannot be changed, but permission assignments can be modified.
                                 </p>
                             </div>
                         )}
@@ -195,7 +199,11 @@ export default function EditRole({ role, permissions }: EditRolePageProps) {
                                         Cancel
                                     </Link>
                                 </Button>
-                                <Button type="submit" disabled={processing}>
+                                <Button 
+                                    type="submit" 
+                                    disabled={processing || (isCoreRole && data.name !== role.name)}
+                                    title={isCoreRole && data.name !== role.name ? "Core role names cannot be changed" : ""}
+                                >
                                     {processing ? 'Updating...' : 'Update Role'}
                                 </Button>
                             </div>

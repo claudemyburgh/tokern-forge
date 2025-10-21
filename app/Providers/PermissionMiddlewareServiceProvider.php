@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Http\Middleware\CheckPermission;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\Router;
+use Illuminate\Support\ServiceProvider;
 
 class PermissionMiddlewareServiceProvider extends ServiceProvider
 {

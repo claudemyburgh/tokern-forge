@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -16,7 +15,7 @@ class RolePermissionSeeder extends Seeder
     {
         // Define the guards
         $guards = ['web', 'api'];
-        
+
         // Create permissions for each guard
         $permissions = [
             'view tokens',
@@ -42,13 +41,13 @@ class RolePermissionSeeder extends Seeder
         $roles = [
             'super-admin' => $permissions, // Gets all permissions
             'admin' => [
-                'view tokens', 
-                'create tokens', 
-                'edit tokens', 
-                'delete tokens', 
+                'view tokens',
+                'create tokens',
+                'edit tokens',
+                'delete tokens',
                 'manage users',
                 'manage roles',
-                'manage permissions'
+                'manage permissions',
             ],
             'pro' => ['view tokens', 'create tokens', 'edit tokens', 'manage settings'],
             'free' => ['view tokens', 'manage settings'],

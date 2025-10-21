@@ -44,27 +44,27 @@ Route::middleware(['auth', 'verified', 'permission:manage users'])->group(functi
         'update' => 'admin.users.update',
         'destroy' => 'admin.users.destroy',
     ]);
-    
+
     // Custom routes with explicit parameter binding to include trashed models
     Route::post('admin/users/{user}/restore', [UserController::class, 'restoreSingle'])->name('admin.users.restore')
         ->where('user', '[0-9]+');
     Route::delete('admin/users/{user}/force-delete', [UserController::class, 'forceDeleteSingle'])->name('admin.users.force-delete')
         ->where('user', '[0-9]+');
-    
+
     // Bulk operations
     Route::delete('admin/users/bulk', [UserController::class, 'destroy'])->name('admin.users.bulk.destroy');
     Route::post('admin/users/bulk/restore', [UserController::class, 'restore'])->name('admin.users.bulk.restore');
     Route::delete('admin/users/bulk/force-delete', [UserController::class, 'forceDelete'])->name('admin.users.bulk.force-delete');
-    
+
     // Temporary debug route
-    Route::get('admin/users/test-restore/{user}', function($user) {
-        return "User ID: " . $user;
+    Route::get('admin/users/test-restore/{user}', function ($user) {
+        return 'User ID: '.$user;
     })->name('admin.users.test.restore');
 });
 
 // Temporary debug route outside middleware
-Route::get('test-route', function() {
-    return "Test route working";
+Route::get('test-route', function () {
+    return 'Test route working';
 });
 
 Route::middleware(['auth', 'verified', 'permission:manage roles'])->group(function () {

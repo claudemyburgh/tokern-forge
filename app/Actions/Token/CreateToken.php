@@ -7,12 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class CreateToken
 {
-
     public function handle(User $user, array $attributes)
     {
-        DB::transaction(function () use ($user, $attributes) {
+        DB::transaction(function () use ($attributes) {
             dd($attributes);
         });
     }
-
 }

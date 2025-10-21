@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\BaseController;
+use App\Actions\User\CreateUser;
+use App\Actions\User\DeleteUsers;
+use App\Actions\User\ForceDeleteUsers;
+use App\Actions\User\ListUsers;
+use App\Actions\User\RestoreUsers;
+use App\Actions\User\UpdateUser;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Resources\Users\UserCollection;
@@ -19,55 +24,22 @@ class UserController extends BaseController
      */
     public function index(Request $request)
     {
-        $this->authorize('manage users');
+        $this->authorize('viewAny', User::class);
 
-        $filter = $request->query('filter', 'withoutTrash');
-        $perPage = $request->query('perPage', 10);
-        $page = $request->query('page', 1);
-        $search = $request->query('search', '');
+        $filters = [
+            'filter' => $request->query('filter', 'withoutTrash'),
+            'perPage' => $request->query('perPage', 10),
+            'page' => $request->query('page', 1),
+            'search' => $request->query('search', ''),
+        ];
 
-        // Validate perPage value
-        $validPerPage = in_array($perPage, [10, 20, 30, 40, 50]) ? $perPage : 10;
-
-        // Validate and cast page to integer
-        $validPage = is_numeric($page) ? (int) $page : 1;
-        if ($validPage < 1) {
-            $validPage = 1;
-        }
-
-        $query = User::with('roles');
-
-        // Apply search filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        switch ($filter) {
-            case 'onlyTrash':
-                $query->onlyTrashed();
-                break;
-            case 'withTrash':
-                $query->withTrashed();
-                break;
-            case 'all':
-                $query->withTrashed(); // Explicitly include trashed records
-                break;
-            case 'withoutTrash':
-            default:
-                // Default behavior - only active records
-                break;
-        }
-
-        $users = $query->latest()->paginate($validPerPage, ['*'], 'page', $validPage);
+        $users = (new ListUsers)->handle($filters);
 
         return inertia('admin/users/index', [
             'users' => new UserCollection($users),
-            'filter' => $filter,
-            'perPage' => $validPerPage,
-            'search' => $search,
+            'filter' => $filters['filter'],
+            'perPage' => $filters['perPage'],
+            'search' => $filters['search'],
         ]);
     }
 
@@ -76,7 +48,7 @@ class UserController extends BaseController
      */
     public function create()
     {
-        $this->authorize('manage users');
+        $this->authorize('create', User::class);
 
         $roles = Role::all();
 
@@ -90,19 +62,11 @@ class UserController extends BaseController
      */
     public function store(StoreUserRequest $request)
     {
-        $this->authorize('manage users');
+        $this->authorize('create', User::class);
 
         $validated = $request->validated();
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
-        ]);
-
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
-        }
+        (new CreateUser)->handle($validated);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');
@@ -113,7 +77,7 @@ class UserController extends BaseController
      */
     public function show(User $user)
     {
-        $this->authorize('manage users');
+        $this->authorize('view', $user);
 
         $user->load('roles', 'permissions');
 
@@ -127,7 +91,7 @@ class UserController extends BaseController
      */
     public function edit(User $user)
     {
-        $this->authorize('manage users');
+        $this->authorize('update', $user);
 
         $user->load('roles');
         $roles = Role::all();
@@ -143,19 +107,11 @@ class UserController extends BaseController
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $this->authorize('manage users');
+        $this->authorize('update', $user);
 
         $validated = $request->validated();
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => isset($validated['password']) ? bcrypt($validated['password']) : $user->password,
-        ]);
-
-        if (isset($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
-        }
+        (new UpdateUser)->handle($user, $validated);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully.');
@@ -164,61 +120,19 @@ class UserController extends BaseController
     /**
      * Remove the specified user(s) from storage.
      */
-    public function destroy($ids = null, Request $request)
+    public function destroy($ids, Request $request)
     {
-        $this->authorize('manage users');
-
         // Handle bulk deletion with the exact pattern specified
         if ($request->has('ids')) {
             $ids = $request->input('ids');
-        } elseif ($ids && is_string($ids)) {
-            $ids = explode(',', $ids);
-        } else {
-            $ids = [$ids];
         }
 
-        // Filter out null values
-        $ids = array_filter($ids);
+        $this->authorize('deleteAny', User::class);
 
-        if (empty($ids)) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No users selected for deletion.');
-        }
+        $result = (new DeleteUsers)->handle($ids, Auth::id());
 
-        // Prevent users from deleting themselves
-        $usersToDelete = \App\Models\User::whereIn('id', $ids)->get();
-        $deletableUsers = [];
-        $protectedUsers = [];
-
-        foreach ($usersToDelete as $user) {
-            if ($user->id === \Illuminate\Support\Facades\Auth::id()) {
-                $protectedUsers[] = $user->name;
-            } else {
-                $deletableUsers[] = $user->id;
-            }
-        }
-
-        if (!empty($deletableUsers)) {
-            \App\Models\User::whereIn('id', $deletableUsers)->delete();
-        }
-
-        if (!empty($protectedUsers)) {
-            if (count($protectedUsers) == 1) {
-                return redirect()->route('admin.users.index')
-                    ->with('error', 'You cannot delete yourself.');
-            } else {
-                return redirect()->route('admin.users.index')
-                    ->with('error', 'Cannot delete protected users: ' . implode(', ', $protectedUsers) . '.');
-            }
-        }
-
-        if (count($deletableUsers) == 1) {
-            return redirect()->route('admin.users.index')
-                ->with('success', 'User deleted successfully.');
-        } else {
-            return redirect()->route('admin.users.index')
-                ->with('success', count($deletableUsers) . ' users deleted successfully.');
-        }
+        return redirect()->route('admin.users.index')
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     /**
@@ -226,13 +140,14 @@ class UserController extends BaseController
      */
     public function restoreSingle($user)
     {
-        $this->authorize('manage users');
+        $this->authorize('restoreAny', User::class);
 
         // Explicitly find the user including trashed models
         $user = User::withTrashed()->findOrFail($user);
 
         if ($user->trashed()) {
             $user->restore();
+
             return redirect()->back()->with('success', 'User restored successfully.');
         }
 
@@ -244,7 +159,7 @@ class UserController extends BaseController
      */
     public function forceDeleteSingle($user)
     {
-        $this->authorize('manage users');
+        $this->authorize('forceDeleteAny', User::class);
 
         // Explicitly find the user including trashed models
         $user = User::withTrashed()->findOrFail($user);
@@ -256,6 +171,7 @@ class UserController extends BaseController
 
         if ($user->trashed()) {
             $user->forceDelete();
+
             return redirect()->back()->with('success', 'User force deleted successfully.');
         }
 
@@ -267,42 +183,17 @@ class UserController extends BaseController
      */
     public function restore(Request $request, $ids = null)
     {
-        $this->authorize('manage users');
-
         // Handle bulk restoration with the exact pattern specified
         if ($request->has('ids')) {
             $ids = $request->input('ids');
-        } elseif ($ids && is_string($ids)) {
-            $ids = explode(',', $ids);
-        } else {
-            $ids = [$ids];
         }
 
-        // Filter out null values
-        $ids = array_filter($ids);
+        $this->authorize('restoreAny', User::class);
 
-        if (empty($ids)) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No users selected for restoration.');
-        }
+        $result = (new RestoreUsers)->handle($ids);
 
-        $usersToRestore = User::withTrashed()->whereIn('id', $ids)->get();
-        $restoredUsers = [];
-
-        foreach ($usersToRestore as $user) {
-            if ($user->trashed()) {
-                $user->restore();
-                $restoredUsers[] = $user->id;
-            }
-        }
-
-        if (count($restoredUsers) == 1) {
-            return redirect()->route('admin.users.index')
-                ->with('success', 'User restored successfully.');
-        } else {
-            return redirect()->route('admin.users.index')
-                ->with('success', count($restoredUsers) . ' users restored successfully.');
-        }
+        return redirect()->route('admin.users.index')
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     /**
@@ -310,46 +201,16 @@ class UserController extends BaseController
      */
     public function forceDelete(Request $request, $ids = null)
     {
-        $this->authorize('manage users');
-
         // Handle bulk force deletion with the exact pattern specified
         if ($request->has('ids')) {
             $ids = $request->input('ids');
-        } elseif ($ids && is_string($ids)) {
-            $ids = explode(',', $ids);
-        } else {
-            $ids = [$ids];
         }
 
-        // Filter out null values
-        $ids = array_filter($ids);
+        $this->authorize('forceDeleteAny', User::class);
 
-        // Prevent users from force deleting themselves
-        $ids = array_filter($ids, function ($id) {
-            return $id != Auth::id();
-        });
+        $result = (new ForceDeleteUsers)->handle($ids, Auth::id());
 
-        if (empty($ids)) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No users selected for force deletion or you tried to delete yourself.');
-        }
-
-        $usersToForceDelete = User::withTrashed()->whereIn('id', $ids)->get();
-        $forceDeletedUsers = [];
-
-        foreach ($usersToForceDelete as $user) {
-            if ($user->trashed()) {
-                $user->forceDelete();
-                $forceDeletedUsers[] = $user->id;
-            }
-        }
-
-        if (count($forceDeletedUsers) == 1) {
-            return redirect()->route('admin.users.index')
-                ->with('success', 'User force deleted successfully.');
-        } else {
-            return redirect()->route('admin.users.index')
-                ->with('success', count($forceDeletedUsers) . ' users force deleted successfully.');
-        }
+        return redirect()->route('admin.users.index')
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 }

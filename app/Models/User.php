@@ -17,12 +17,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Permission\Traits\HasRoles;
 
-
 #[ObservedBy(UserObserver::class)]
-class User extends Authenticatable  implements HasMedia
+class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, SoftDeletes, InteractsWithMedia;
+    use HasFactory, HasRoles, InteractsWithMedia, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -51,7 +50,6 @@ class User extends Authenticatable  implements HasMedia
     ];
 
     protected $appends = ['avatar', 'avatar_small', 'is_super_admin'];
-
 
     public function isSuperAdmin(): bool
     {

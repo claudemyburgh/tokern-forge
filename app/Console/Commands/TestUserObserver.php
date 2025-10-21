@@ -27,8 +27,8 @@ class TestUserObserver extends Command
     public function handle()
     {
         // Generate a unique email for testing
-        $uniqueEmail = 'observer-' . time() . '@test.com';
-        
+        $uniqueEmail = 'observer-'.time().'@test.com';
+
         // Create a new user
         $user = User::create([
             'name' => 'Observer Test User',
@@ -46,7 +46,7 @@ class TestUserObserver extends Command
 
         // Display the user's roles
         $roles = $user->roles->pluck('name')->toArray();
-        $this->line('User roles: ' . implode(', ', $roles));
+        $this->line('User roles: '.implode(', ', $roles));
 
         // Clean up - delete the test user
         $user->delete();

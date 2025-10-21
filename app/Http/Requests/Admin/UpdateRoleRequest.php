@@ -22,12 +22,15 @@ class UpdateRoleRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('roles')->ignore($this->route('role'))
+                Rule::unique('roles')
+                    ->where('guard_name', $this->input('guard_name', $this->role->guard_name))
+                    ->ignore($this->role),
             ],
             'permissions' => 'array',
             'permissions.*' => 'array',

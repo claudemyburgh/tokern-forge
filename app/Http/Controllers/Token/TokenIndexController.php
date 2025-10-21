@@ -20,7 +20,7 @@ class TokenIndexController extends Controller implements HasMiddleware
     public function __invoke(ViewTokens $viewTokens)
     {
         return Inertia::render('token/index', [
-            'tokens' => Inertia::scroll(fn() => $viewTokens->handle())
+            'tokens' => Inertia::scroll(fn () => $viewTokens->handle()),
         ]);
     }
 }

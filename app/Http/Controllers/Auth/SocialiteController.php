@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\SocialEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -66,7 +64,7 @@ class SocialiteController extends Controller
      */
     private function validateProvider($provider)
     {
-        if (!in_array($provider, ['google', 'github', 'twitter'])) {
+        if (! in_array($provider, ['google', 'github', 'twitter'])) {
             abort(404);
         }
     }

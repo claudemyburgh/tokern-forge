@@ -22,7 +22,7 @@ class UpdatePermissionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:permissions,name,' . $this->permission->id,
+            'name' => 'required|string|max:255|unique:permissions,name,'.$this->permission->id,
             'roles' => 'array|exists:roles,name',
         ];
     }

@@ -13,18 +13,15 @@ class Token extends Model
     use HasFactory;
 
     protected $fillable = [
-        "name",
-        "symbol",
-        "description",
-        "supply",
-        "decimals",
+        'name',
+        'symbol',
+        'description',
+        'supply',
+        'decimals',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-
-
-
 }
