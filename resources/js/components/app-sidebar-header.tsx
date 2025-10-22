@@ -1,6 +1,9 @@
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { RainbowButton } from './ui/rainbow-button';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -8,10 +11,23 @@ export function AppSidebarHeader({
     breadcrumbs?: BreadcrumbItemType[];
 }) {
     return (
-        <header className="sticky top-0 mx-4 flex h-15 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
-            <div className="flex items-center gap-2">
-                <SidebarTrigger className="-ml-1" />
+        <header className="fixed top-0 z-50 mx-0 flex h-15 w-full shrink-0 items-center border-b border-sidebar-border/50 bg-background/95 backdrop-blur transition-[left,width] ease-linear group-has-data-[state=collapsed]/sidebar-wrapper:left-0 group-has-data-[state=collapsed]/sidebar-wrapper:w-full group-has-data-[state=expanded]/sidebar-wrapper:left-[var(--sidebar-width,16rem)] group-has-data-[state=expanded]/sidebar-wrapper:w-[calc(100vw-var(--sidebar-width,16rem))] supports-[backdrop-filter]:bg-background/60 md:px-4">
+            {/* Left Navigation Group */}
+            <div className="flex items-center gap-3 pr-2 pl-4 md:pr-4 md:pl-0">
+                <SidebarTrigger className="shrink-0" />
+                <Separator orientation="vertical" className={`!h-6`} />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
+
+            {/* Spacer for balanced layout */}
+            <div className="min-w-0 flex-1" />
+
+            {/* Right Interactive Controls Group */}
+            <div className="flex items-center gap-2 pr-4 md:pr-6">
+                <AppearanceToggleDropdown />
+                <RainbowButton variant="outline" size="sm">
+                    Connect Wallet
+                </RainbowButton>
             </div>
         </header>
     );

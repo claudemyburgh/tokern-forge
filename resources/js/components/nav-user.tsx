@@ -22,7 +22,7 @@ export function NavUser() {
     const isMobile = useIsMobile();
 
     return (
-        <SidebarMenu>
+        <SidebarMenu className={`relative isolate`}>
             <SidebarMenuItem>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -36,7 +36,7 @@ export function NavUser() {
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                        className="z-65 w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
                         align="end"
                         side={
                             isMobile
