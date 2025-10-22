@@ -8,12 +8,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useTableState } from '@/hooks/use-table-state';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { useState } from 'react';
 
 interface Permission {
     id: number;
@@ -52,9 +52,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Core roles that cannot be deleted
-const coreRoles = ['super-admin'];
-
 // Since roles don't have soft deletes, we only show relevant filter options
 const filterOptions = [{ key: 'all', label: 'All Records' }];
 
@@ -64,7 +61,23 @@ export default function RolesIndex({
     perPage,
     search,
 }: RolesPageProps) {
-    const [loading, setLoading] = useState(false);
+    const {
+        currentFilter,
+        currentPerPage,
+        currentSearch,
+        loading,
+        handleFilterChange,
+        handlePerPageChange,
+        handlePageChange,
+        handleSearch,
+        setLoading,
+    } = useTableState({
+        initialFilter: filter,
+        initialPerPage: perPage,
+        initialSearch: search,
+        initialPage: pageRoles?.meta?.current_page || 1,
+        baseUrl: '/admin/roles',
+    });
 
     const handleBulkDelete = (ids: string[]) => {
         setLoading(true);
@@ -145,7 +158,8 @@ export default function RolesIndex({
                     <div>
                         <h1 className="text-2xl font-bold">Role Management</h1>
                         <p className="text-muted-foreground">
-                            Manage user roles and their permissions across guards
+                            Manage user roles and their permissions across
+                            guards
                         </p>
                     </div>
                     <Button asChild>
@@ -161,7 +175,8 @@ export default function RolesIndex({
                         <CardHeader>
                             <CardTitle>All Roles</CardTitle>
                             <CardDescription>
-                                List of all roles in the system (grouped by name)
+                                List of all roles in the system (grouped by
+                                name)
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -172,10 +187,16 @@ export default function RolesIndex({
                                     created_at: false,
                                     updated_at: false,
                                 }}
-                                perPage={15}
+                                perPage={currentPerPage}
+                                onPerPageChange={handlePerPageChange}
+                                paginationMeta={pageRoles.meta || undefined}
+                                onPageChange={handlePageChange}
                                 filters={filterOptions}
-                                currentFilter="all"
+                                onFilterChange={handleFilterChange}
+                                currentFilter={currentFilter}
+                                onSearch={handleSearch}
                                 searchPlaceholder="Search roles..."
+                                searchQuery={currentSearch}
                                 onDelete={handleBulkDelete}
                                 loading={loading}
                                 actions={actions}

@@ -9,12 +9,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useTableState } from '@/hooks/use-table-state';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { RiAddLine } from '@remixicon/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { useState } from 'react';
 
 interface Role {
     id: number;
@@ -52,17 +52,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Core permissions that cannot be deleted
-const corePermissions = [
-    'view tokens',
-    'create tokens',
-    'edit tokens',
-    'delete tokens',
-    'manage users',
-    'manage roles',
-    'manage permissions',
-    'manage settings',
-];
 
 // Since permissions don't have soft deletes, we only show relevant filter options
 const filterOptions = [
@@ -75,7 +64,23 @@ export default function PermissionsIndex({
     perPage,
     search,
 }: PermissionsPageProps) {
-    const [loading, setLoading] = useState(false);
+    const {
+        currentFilter,
+        currentPerPage,
+        currentSearch,
+        loading,
+        handleFilterChange,
+        handlePerPageChange,
+        handlePageChange,
+        handleSearch,
+        setLoading,
+    } = useTableState({
+        initialFilter: filter,
+        initialPerPage: perPage,
+        initialSearch: search,
+        initialPage: pagePermissions?.meta?.current_page || 1,
+        baseUrl: '/admin/permissions',
+    });
 
     const handleBulkDelete = (ids: string[]) => {
         setLoading(true);
@@ -171,10 +176,16 @@ export default function PermissionsIndex({
                                     created_at: false,
                                     updated_at: false,
                                 }}
-                                perPage={15}
+                                perPage={currentPerPage}
+                                onPerPageChange={handlePerPageChange}
+                                paginationMeta={pagePermissions.meta || undefined}
+                                onPageChange={handlePageChange}
                                 filters={filterOptions}
-                                currentFilter="all"
+                                onFilterChange={handleFilterChange}
+                                currentFilter={currentFilter}
+                                onSearch={handleSearch}
                                 searchPlaceholder="Search permissions..."
+                                searchQuery={currentSearch}
                                 onDelete={handleBulkDelete}
                                 loading={loading}
                                 actions={{
