@@ -4,9 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { useWallet } from '@solana/wallet-adapter-react';
-import {
-    WalletMultiButton,
-} from '@solana/wallet-adapter-react-ui';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
@@ -18,6 +16,13 @@ export function AppSidebarHeader({
     const formatPublicKey = (key: string | undefined) => {
         if (!key) return '';
         return `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
+    };
+
+    const getNetworkName = (endpoint: string) => {
+        if (endpoint.includes('devnet')) return 'Devnet';
+        if (endpoint.includes('mainnet-beta')) return 'Mainnet';
+        if (endpoint.includes('testnet')) return 'Testnet';
+        return 'Unknown';
     };
 
     return (
@@ -48,7 +53,9 @@ export function AppSidebarHeader({
                         borderRadius: '0.375rem',
                     }}
                 >
-                    {connected ? formatPublicKey(publicKey?.toBase58()) : 'Connect Wallet'}
+                    {connected
+                        ? formatPublicKey(publicKey?.toBase58())
+                        : 'Connect Wallet'}
                 </WalletMultiButton>
             </div>
         </header>
