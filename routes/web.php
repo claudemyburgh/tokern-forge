@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DashboardIndexController;
 use App\Http\Controllers\Token\TokenCreateController;
 use App\Http\Controllers\Token\TokenIndexController;
 use App\Http\Controllers\Token\TokenStoreController;
@@ -14,9 +15,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', DashboardIndexController::class)->name('dashboard');
 
     Route::get('profile', function () {
         return Inertia::render('profile');
@@ -56,16 +55,9 @@ Route::middleware(['auth', 'verified', 'permission:manage users'])->group(functi
     Route::post('admin/users/bulk/restore', [UserController::class, 'restore'])->name('admin.users.bulk.restore');
     Route::delete('admin/users/bulk/force-delete', [UserController::class, 'forceDelete'])->name('admin.users.bulk.force-delete');
 
-    // Temporary debug route
-    Route::get('admin/users/test-restore/{user}', function ($user) {
-        return 'User ID: '.$user;
-    })->name('admin.users.test.restore');
+
 });
 
-// Temporary debug route outside middleware
-Route::get('test-route', function () {
-    return 'Test route working';
-});
 
 Route::middleware(['auth', 'verified', 'permission:manage roles'])->group(function () {
     Route::resource('admin/roles', RoleController::class)->names([
