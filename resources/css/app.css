@@ -260,4 +260,6 @@
         letter-spacing: var(--tracking-normal);
         @apply bg-background text-foreground;
     }
+
+
 }
