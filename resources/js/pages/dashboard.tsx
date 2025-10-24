@@ -11,7 +11,6 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { useWallet } from '@solana/wallet-adapter-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,13 +20,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard() {
-    const { connected, publicKey } = useWallet();
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {publicKey}
                     <Card>
                         <CardHeader>
                             <CardTitle>Token Management</CardTitle>
