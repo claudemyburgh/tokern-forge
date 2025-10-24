@@ -38,20 +38,33 @@ export default function Index({ tokens }) {
                 )}
             >
                 {tokenList.map((item) => (
-                    <Card key={item.id} className="min-h-[6.5rem] w-full">
+                    <Card
+                        key={item.id}
+                        className="@container/card min-h-[6.5rem] w-full"
+                    >
                         <CardHeader>
-                            <CardTitle className="flex items-center justify-between">
-                                <span>{item.name}</span>
-                                <Badge
-                                    variant={`outline`}
-                                    className="rounded-full"
-                                >
-                                    {item.symbol}
-                                </Badge>
-                            </CardTitle>
-                            <CardDescription className={`line-clamp-3 text-sm`}>
-                                {item.description}
-                            </CardDescription>
+                            <div className="flex flex-col @lg/card:flex-row">
+                                <div
+                                    className={`mx-auto size-22 shrink-0 rounded-full bg-accent-foreground @lg/card:mr-0 @lg/card:ml-3 @lg/card:size-14`}
+                                ></div>
+                                <div>
+                                    <CardTitle className="flex items-center justify-between">
+                                        <span>{item.name}</span>
+                                        <Badge
+                                            variant={`outline`}
+                                            className="rounded-full"
+                                        >
+                                            {item.symbol}
+                                        </Badge>
+                                    </CardTitle>
+                                    <small>{item.created_at}</small>
+                                    <CardDescription
+                                        className={`line-clamp-3 text-sm`}
+                                    >
+                                        {item.description}
+                                    </CardDescription>
+                                </div>
+                            </div>
                         </CardHeader>
                     </Card>
                 ))}
