@@ -1,5 +1,6 @@
 import ToolsIndexPageController from '@/actions/App/Http/Controllers/Tools/ToolsIndexPageController';
 import AppLayout from '@/layouts/app-layout';
+import SolanaAirdropForm from '@/components/solana-airdrop-form';
 import type { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
@@ -17,12 +18,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function SolanaAirDrop() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tools" />
+            <Head title="Solana Devnet Airdrop" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias
-                enim ipsum itaque laudantium molestias reiciendis, repudiandae
-                totam. Asperiores culpa cum enim minima nobis non, optio
-                perspiciatis, veniam vitae voluptas voluptate.
+                <div className="flex items-center justify-center py-8">
+                    <SolanaAirdropForm />
+                </div>
             </div>
         </AppLayout>
     );
