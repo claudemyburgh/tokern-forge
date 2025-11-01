@@ -1,4 +1,5 @@
 import solBg from '@/../img/solana-bg.jpg';
+import SolanaAirDropController from '@/actions/App/Http/Controllers/Tools/SolanaAirDropController';
 import ToolsIndexPageController from '@/actions/App/Http/Controllers/Tools/ToolsIndexPageController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import {
 import { MagicCard } from '@/components/ui/magic-card';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Tools',
@@ -54,7 +55,12 @@ export default function Index() {
                                     // variant="secondary"
                                     className="mt-3"
                                 >
-                                    <a href="/tokens/create">Airdrop</a>
+                                    <Link
+                                        href={SolanaAirDropController.index()}
+                                        prefetch
+                                    >
+                                        Airdrop
+                                    </Link>
                                 </Button>
                             </CardContent>
                             <img

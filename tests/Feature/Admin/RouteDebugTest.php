@@ -35,19 +35,19 @@ test('debug individual restore route exists', function () {
 
     // Check if the route exists by trying to generate it
     $route = route('admin.users.restore', $user);
-    echo 'Route: '.$route."\n";
+    //    echo 'Route: '.$route."\n";
 
     // Try to access the route
     $response = $this->post($route);
 
     // Dump response status
-    echo 'Status: '.$response->status()."\n";
+    //    echo 'Status: '.$response->status()."\n";
 
     // Also try with explicit URL
     $explicitUrl = '/admin/users/'.$user->id.'/restore';
-    echo 'Explicit URL: '.$explicitUrl."\n";
+    //    echo 'Explicit URL: '.$explicitUrl."\n";
     $response2 = $this->post($explicitUrl);
-    echo 'Explicit URL Status: '.$response2->status()."\n";
+    //    echo 'Explicit URL Status: '.$response2->status()."\n";
 
     // Check for redirect response (302) which is the correct behavior
     $response->assertRedirect();

@@ -18,6 +18,6 @@ class TokenStoreController extends Controller implements HasMiddleware
      */
     public function __invoke(Request $request)
     {
-        //
+        dd($request);
     }
 }

@@ -7,7 +7,6 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Inertia\Inertia;
 
 class ToolsIndexPageController extends Controller implements HasMiddleware
-
 {
     public static function middleware()
     {
@@ -18,6 +17,4 @@ class ToolsIndexPageController extends Controller implements HasMiddleware
     {
         return Inertia::render('tools/index');
     }
-
-
 }

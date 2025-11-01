@@ -7,7 +7,6 @@ use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-
 Route::redirect('settings', '/settings/profile');
 
 Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
