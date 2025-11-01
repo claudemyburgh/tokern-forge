@@ -21,18 +21,25 @@ Route::get('/', function () {
 })->name('home');
 
 // Authenticated user routes
-Route::get('dashboard', DashboardIndexController::class)->name('dashboard');
-Route::get('profile', ProfilePageController::class)->name('profile');
+Route::get('dashboard', DashboardIndexController::class)
+    ->name('dashboard');
+Route::get('profile', ProfilePageController::class)
+    ->name('profile');
 
 // Token management routes
-Route::get('tokens', TokenIndexController::class)->name('tokens.index');
-Route::get('tokens/create', TokenCreateController::class)->name('tokens.create');
-Route::post('tokens', TokenStoreController::class)->name('tokens.store');
+Route::get('tokens', TokenIndexController::class)
+    ->name('tokens.index');
+Route::get('tokens/create', TokenCreateController::class)
+    ->name('tokens.create');
+Route::post('tokens', TokenStoreController::class)
+    ->name('tokens.store');
 
 // Tools routes
-Route::get('tools', ToolsIndexPageController::class)->name('tools.index');
-Route::get('tools/solana-air-drop', [SolanaAirDropController::class, 'index'])->name('tools.solana-air-drop');
-
+Route::get('tools', ToolsIndexPageController::class)
+    ->name('tools.index');
+Route::get('tools/solana-air-drop', [SolanaAirDropController::class, 'index'])
+    ->name('tools.solana-air-drop');
+Route::post('tools/solana-air-drop/request', [SolanaAirDropController::class, 'requestAirdrop'])->name('tools.solana-air-drop.request');
 // Market routes
 Route::get('market-place', MarketIndexPageController::class)->name('market.index');
 Route::get('market-place/{token}', MarketShowPageController::class)->name('market.show');
