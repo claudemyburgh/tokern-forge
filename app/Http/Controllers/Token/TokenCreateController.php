@@ -4,10 +4,16 @@ namespace App\Http\Controllers\Token;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Inertia\Inertia;
 
-class TokenCreateController extends Controller
+class TokenCreateController extends Controller implements HasMiddleware
 {
+    public static function middleware()
+    {
+        return ['auth', 'verified', 'permission:create tokens'];
+    }
+
     /**
      * Handle the incoming request.
      */

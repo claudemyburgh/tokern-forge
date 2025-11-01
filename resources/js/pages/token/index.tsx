@@ -5,6 +5,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { MagicCard } from '@/components/ui/magic-card';
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -38,35 +39,37 @@ export default function Index({ tokens }) {
                 )}
             >
                 {tokenList.map((item) => (
-                    <Card
+                    <MagicCard
                         key={item.id}
-                        className="@container/card min-h-[6.5rem] w-full"
+                        className={`isolate flex flex-col overflow-clip rounded-xl p-0.5`}
                     >
-                        <CardHeader>
-                            <div className="flex flex-col @lg/card:flex-row">
-                                <div
-                                    className={`mx-auto size-22 shrink-0 rounded-full bg-accent-foreground @lg/card:mr-0 @lg/card:ml-3 @lg/card:size-14`}
-                                ></div>
-                                <div>
-                                    <CardTitle className="flex items-center justify-between">
-                                        <span>{item.name}</span>
-                                        <Badge
-                                            variant={`outline`}
-                                            className="rounded-full"
+                        <Card className="@container/card flex !h-full w-full flex-1 dark:bg-card/90">
+                            <CardHeader>
+                                <div className="flex flex-col @lg/card:flex-row">
+                                    <div
+                                        className={`mx-auto size-22 shrink-0 rounded-full bg-accent-foreground @lg/card:mr-0 @lg/card:ml-3 @lg/card:size-14`}
+                                    ></div>
+                                    <div>
+                                        <CardTitle className="flex items-center justify-between">
+                                            <span>{item.name}</span>
+                                            <Badge
+                                                variant={`outline`}
+                                                className="rounded-full"
+                                            >
+                                                {item.symbol}
+                                            </Badge>
+                                        </CardTitle>
+                                        <small>{item.created_at}</small>
+                                        <CardDescription
+                                            className={`line-clamp-3 text-sm`}
                                         >
-                                            {item.symbol}
-                                        </Badge>
-                                    </CardTitle>
-                                    <small>{item.created_at}</small>
-                                    <CardDescription
-                                        className={`line-clamp-3 text-sm`}
-                                    >
-                                        {item.description}
-                                    </CardDescription>
+                                            {item.description}
+                                        </CardDescription>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardHeader>
-                    </Card>
+                            </CardHeader>
+                        </Card>
+                    </MagicCard>
                 ))}
             </InfiniteScroll>
         </AppLayout>

@@ -6,9 +6,11 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardIndexController;
 use App\Http\Controllers\Market\MarketIndexPageController;
 use App\Http\Controllers\Market\MarketShowPageController;
+use App\Http\Controllers\ProfilePageController;
 use App\Http\Controllers\Token\TokenCreateController;
 use App\Http\Controllers\Token\TokenIndexController;
 use App\Http\Controllers\Token\TokenStoreController;
+use App\Http\Controllers\Tools\ToolsIndexPageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,23 +18,13 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', DashboardIndexController::class)->name('dashboard');
+Route::get('dashboard', DashboardIndexController::class)->name('dashboard');
+Route::get('profile', ProfilePageController::class)->name('profile');
+Route::get('tokens', TokenIndexController::class)->name('tokens.index');
+Route::get('tokens/create', TokenCreateController::class)->name('tokens.create');
+Route::post('tokens', TokenStoreController::class)->name('tokens.store');
 
-    Route::get('profile', function () {
-        return Inertia::render('profile');
-    })->name('profile');
-});
-
-// Example route using our permission middleware
-Route::middleware(['auth', 'verified', 'permission:view tokens'])->group(function () {
-    Route::get('tokens', TokenIndexController::class)->name('tokens.index');
-});
-
-Route::middleware(['auth', 'verified', 'permission:create tokens'])->group(function () {
-    Route::get('tokens/create', TokenCreateController::class)->name('tokens.create');
-    Route::post('tokens', TokenStoreController::class)->name('tokens.store');
-});
+Route::get('tools', ToolsIndexPageController::class)->name('tools.index');
 
 // Admin routes - only accessible to users with appropriate permissions
 Route::middleware(['auth', 'verified', 'permission:manage users'])->group(function () {
@@ -57,9 +49,7 @@ Route::middleware(['auth', 'verified', 'permission:manage users'])->group(functi
     Route::post('admin/users/bulk/restore', [UserController::class, 'restore'])->name('admin.users.bulk.restore');
     Route::delete('admin/users/bulk/force-delete', [UserController::class, 'forceDelete'])->name('admin.users.bulk.force-delete');
 
-
 });
-
 
 Route::middleware(['auth', 'verified', 'permission:manage roles'])->group(function () {
     Route::resource('admin/roles', RoleController::class)->names([

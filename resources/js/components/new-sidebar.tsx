@@ -3,6 +3,7 @@ import * as React from 'react';
 import MarketIndexPageController from '@/actions/App/Http/Controllers/Market/MarketIndexPageController';
 import TokenCreateController from '@/actions/App/Http/Controllers/Token/TokenCreateController';
 import TokenIndexController from '@/actions/App/Http/Controllers/Token/TokenIndexController';
+import ToolsIndexPageController from '@/actions/App/Http/Controllers/Tools/ToolsIndexPageController';
 import AppLogo from '@/components/app-logo';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -79,7 +80,7 @@ const data = {
                 },
                 {
                     title: 'Tools',
-                    url: '#',
+                    url: ToolsIndexPageController().url,
                     icon: RiCodeSSlashLine,
                 },
                 {

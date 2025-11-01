@@ -48,7 +48,11 @@ type TokenFormData = {
     wallet_address?: string;
 };
 
-export default function TokenForm({ setPreviewData }: { setPreviewData?: (data: any) => void }) {
+export default function TokenForm({
+    setPreviewData,
+}: {
+    setPreviewData?: (data: any) => void;
+}) {
     const form = useForm<TokenFormData>({
         name: '',
         symbol: '',
@@ -71,13 +75,13 @@ export default function TokenForm({ setPreviewData }: { setPreviewData?: (data: 
 
     const handleImageChange = (file: File | null) => {
         form.setData('image', file);
-        
+
         // Update preview with image URL
         if (file && setPreviewData) {
             const imageUrl = URL.createObjectURL(file);
-            setPreviewData(prev => ({ ...prev, image: imageUrl }));
+            setPreviewData((prev) => ({ ...prev, image: imageUrl }));
         } else if (setPreviewData) {
-            setPreviewData(prev => ({ ...prev, image: null }));
+            setPreviewData((prev) => ({ ...prev, image: null }));
         }
     };
 
@@ -100,15 +104,22 @@ export default function TokenForm({ setPreviewData }: { setPreviewData?: (data: 
                 name: form.data.name || 'Your Token Name',
                 symbol: form.data.symbol || 'SYMBOL',
                 supply: form.data.supply || 1000000,
-                description: form.data.description || 'Your token description will appear here...',
-                image: null // This will be handled separately in handleImageChange
+                description:
+                    form.data.description ||
+                    'Your token description will appear here...',
+                image: null, // This will be handled separately in handleImageChange
             });
         }
-    }, [form.data.name, form.data.symbol, form.data.supply, form.data.description]);
+    }, [
+        form.data.name,
+        form.data.symbol,
+        form.data.supply,
+        form.data.description,
+    ]);
 
     return (
         <MagicCard className={`block rounded-xl p-0.5`}>
-            <Card className={`p-b0 border-transparent pb-0 dark:bg-card/98`}>
+            <Card className={`p-b0 border-transparent pb-0 dark:bg-card/90`}>
                 <CardHeader className="space-y-3 pb-6">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">

@@ -11,7 +11,7 @@ class TokenIndexController extends Controller implements HasMiddleware
 {
     public static function middleware()
     {
-        return ['auth', 'verified'];
+        return ['auth', 'verified', 'permission:view tokens'];
     }
 
     /**
