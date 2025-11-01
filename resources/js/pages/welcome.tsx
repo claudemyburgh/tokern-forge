@@ -1,4 +1,3 @@
-import { BentoCard, BentoGrid } from '@/components/ui/bento-grid';
 import { dashboard, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -57,48 +56,6 @@ export default function Welcome() {
                         No coding required.
                     </p>
                 </div>
-
-                <BentoGrid className={`mx-auto max-w-7xl`}>
-                    <BentoCard
-                        name={'First Card'}
-                        className={
-                            'lg:col-start-2 lg:col-end-3 lg:row-start-1 lg:row-end-4'
-                        }
-                        background={''}
-                        Icon={'symbol'}
-                        description={
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto aut beatae cum delectus explicabo, iusto magni nemo possimus repudiandae vitae?'
-                        }
-                        href={''}
-                        cta={''}
-                    ></BentoCard>
-                    <BentoCard
-                        name={'Second Title'}
-                        className={
-                            'lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-3'
-                        }
-                        background={''}
-                        Icon={'symbol'}
-                        description={
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto aut beatae cum delectus explicabo, iusto magni nemo possimus repudiandae vitae?'
-                        }
-                        href={''}
-                        cta={''}
-                    ></BentoCard>
-                    <BentoCard
-                        name={'Third title'}
-                        className={
-                            'lg:col-start-1 lg:col-end-2 lg:row-start-3 lg:row-end-4'
-                        }
-                        background={''}
-                        Icon={'symbol'}
-                        description={
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto aut beatae cum delectus explicabo, iusto magni nemo possimus repudiandae vitae?'
-                        }
-                        href={''}
-                        cta={''}
-                    ></BentoCard>
-                </BentoGrid>
             </div>
         </>
     );

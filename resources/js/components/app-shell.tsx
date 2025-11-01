@@ -12,7 +12,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
 
     if (variant === 'header') {
         return (
-            <div className="relative flex min-h-screen w-full flex-col bg-red-500">
+            <div className="relative flex min-h-screen w-full flex-col">
                 {children}
             </div>
         );

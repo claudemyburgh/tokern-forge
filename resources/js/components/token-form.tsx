@@ -48,7 +48,7 @@ type TokenFormData = {
     wallet_address?: string;
 };
 
-export default function TokenForm() {
+export default function TokenForm({ setPreviewData }: { setPreviewData?: (data: any) => void }) {
     const form = useForm<TokenFormData>({
         name: '',
         symbol: '',
@@ -71,6 +71,14 @@ export default function TokenForm() {
 
     const handleImageChange = (file: File | null) => {
         form.setData('image', file);
+        
+        // Update preview with image URL
+        if (file && setPreviewData) {
+            const imageUrl = URL.createObjectURL(file);
+            setPreviewData(prev => ({ ...prev, image: imageUrl }));
+        } else if (setPreviewData) {
+            setPreviewData(prev => ({ ...prev, image: null }));
+        }
     };
 
     const handleSubmit = (action: 'draft' | 'create') => {
@@ -85,17 +93,18 @@ export default function TokenForm() {
     const formatSupply = (value: number) =>
         new Intl.NumberFormat('en-US').format(value);
 
-    // 🧠 Auto-save draft every 5 seconds
+    // Update preview when form data changes
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (form.data.name || form.data.symbol) {
-                form.setData('action', 'draft');
-                form.post('/tokens/draft', { preserveScroll: true });
-            }
-        }, 5000);
-
-        return () => clearTimeout(timeout);
-    }, [form.data]);
+        if (setPreviewData) {
+            setPreviewData({
+                name: form.data.name || 'Your Token Name',
+                symbol: form.data.symbol || 'SYMBOL',
+                supply: form.data.supply || 1000000,
+                description: form.data.description || 'Your token description will appear here...',
+                image: null // This will be handled separately in handleImageChange
+            });
+        }
+    }, [form.data.name, form.data.symbol, form.data.supply, form.data.description]);
 
     return (
         <MagicCard className={`block rounded-xl p-0.5`}>

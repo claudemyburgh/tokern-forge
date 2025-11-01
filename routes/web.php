@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardIndexController;
+use App\Http\Controllers\Market\MarketIndexPageController;
+use App\Http\Controllers\Market\MarketShowPageController;
 use App\Http\Controllers\Token\TokenCreateController;
 use App\Http\Controllers\Token\TokenIndexController;
 use App\Http\Controllers\Token\TokenStoreController;
@@ -70,6 +72,9 @@ Route::middleware(['auth', 'verified', 'permission:manage roles'])->group(functi
         'destroy' => 'admin.roles.destroy',
     ]);
     Route::delete('admin/roles/bulk', [RoleController::class, 'destroy'])->name('admin.roles.bulk.destroy');
+
+    Route::get('market-place', MarketIndexPageController::class)->name('market.index');
+    Route::get('market-place/{token}', MarketShowPageController::class)->name('market.show');
 });
 
 Route::middleware(['auth', 'verified', 'permission:manage permissions'])->group(function () {

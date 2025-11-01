@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import MarketIndexPageController from '@/actions/App/Http/Controllers/Market/MarketIndexPageController';
 import TokenCreateController from '@/actions/App/Http/Controllers/Token/TokenCreateController';
 import TokenIndexController from '@/actions/App/Http/Controllers/Token/TokenIndexController';
 import AppLogo from '@/components/app-logo';
@@ -38,6 +39,7 @@ import {
     RiScanLine,
     RiSettings3Line,
     RiShieldUserLine,
+    RiStore2Line,
     RiUserSettingsLine,
 } from '@remixicon/react';
 
@@ -69,6 +71,11 @@ const data = {
                             icon: RiCoinLine,
                         },
                     ],
+                },
+                {
+                    title: 'Market Place',
+                    url: MarketIndexPageController().url,
+                    icon: RiStore2Line,
                 },
                 {
                     title: 'Tools',

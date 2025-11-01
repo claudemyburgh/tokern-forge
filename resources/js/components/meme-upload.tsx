@@ -3,7 +3,7 @@
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Upload, XCircleIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Dropzone from 'react-dropzone';
 
 const ImagePreview = ({
@@ -38,6 +38,15 @@ export default function MemeUpload({
 }) {
     const [memePicture, setMemePicture] = useState<string | null>(null);
 
+    // Clean up object URLs to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            if (memePicture && memePicture.startsWith('blob:')) {
+                URL.revokeObjectURL(memePicture);
+            }
+        };
+    }, [memePicture]);
+
     return (
         <div className="w-full space-y-2">
             <Label htmlFor="meme" className="text-base font-semibold">
@@ -49,6 +58,9 @@ export default function MemeUpload({
                         <ImagePreview
                             url={memePicture}
                             onRemove={() => {
+                                if (memePicture && memePicture.startsWith('blob:')) {
+                                    URL.revokeObjectURL(memePicture);
+                                }
                                 setMemePicture(null);
                                 onFileChange?.(null);
                             }}
