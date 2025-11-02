@@ -31,30 +31,19 @@ export default function SolanaAirdropForm() {
     useEffect(() => {
         const props = page.props as any;
 
-        console.log('=== PAGE PROPS UPDATED ===');
-        console.log('All props:', JSON.stringify(props, null, 2));
-        console.log('Success:', props.success);
-        console.log('Message:', props.message);
-        console.log('Signature:', props.signature);
-        console.log('Wallet:', props.wallet);
-        console.log('Amount:', props.amount);
-        console.log('========================');
-
         // Always reset loading state when props change
         if (isLoading) {
-            console.log('Resetting loading state');
             setIsLoading(false);
         }
 
         // Check for success/error flash messages
         if (props.success === true) {
-            console.log('SUCCESS DETECTED - Showing success toast');
             const shortWallet = props.wallet
                 ? `${props.wallet.substring(0, 8)}...${props.wallet.substring(props.wallet.length - 4)}`
                 : 'wallet';
 
             toast.success(
-                `✅ Airdrop Successful! ${props.amount} SOL sent to ${shortWallet}`,
+                `Airdrop Successful! ${props.amount} SOL sent to ${shortWallet}`,
                 {
                     description: props.signature ? (
                         <a
@@ -66,7 +55,7 @@ export default function SolanaAirdropForm() {
                             View on Solana Explorer →
                         </a>
                     ) : undefined,
-                    duration: 6000,
+                    duration: 2000,
                     dismissible: true,
                     position: 'top-right',
                 },
@@ -76,9 +65,9 @@ export default function SolanaAirdropForm() {
             setFormData({ wallet: '', amount: '1', email: '' });
             setErrors({});
         } else if (props.success === false && props.message) {
-            toast.error('❌ Airdrop Failed', {
+            toast.error('Airdrop Failed', {
                 description: props.message,
-                duration: 8000,
+                duration: 2000,
             });
         }
     }, [isLoading, page.props]);
@@ -167,17 +156,13 @@ export default function SolanaAirdropForm() {
             email: formData.email.trim() || undefined,
         };
 
-        console.log('Submitting airdrop request:', submitData);
-
         router.post('/tools/solana-air-drop/request', submitData, {
             preserveScroll: true,
             onError: (errors) => {
-                console.error('Validation errors:', errors);
                 setIsLoading(false);
                 toast.error('Please check the form for errors');
             },
             onFinish: () => {
-                console.log('Request finished');
                 // Make sure loading is reset even if useEffect doesn't fire
                 setTimeout(() => {
                     if (isLoading) {
