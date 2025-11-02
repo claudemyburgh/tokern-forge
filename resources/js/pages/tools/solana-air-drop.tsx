@@ -1,6 +1,7 @@
 import ToolsIndexPageController from '@/actions/App/Http/Controllers/Tools/ToolsIndexPageController';
-import AppLayout from '@/layouts/app-layout';
+
 import SolanaAirdropForm from '@/components/solana-airdrop-form';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
