@@ -1,9 +1,9 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "/usr/bin/php8.4",
+            "command": "C:\\tools\\php84\\php.exe",
             "args": [
-                "/home/vagrant/code/laravel-web3/token-forge/artisan",
+                "C:\\www\\laravel-web3\\token-forge\\artisan",
                 "boost:mcp"
             ]
         }

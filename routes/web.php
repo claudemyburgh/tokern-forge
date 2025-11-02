@@ -44,8 +44,6 @@ Route::post('tools/solana-air-drop/request', [SolanaAirDropController::class, 'r
 Route::get('market-place', MarketIndexPageController::class)->name('market.index');
 Route::get('market-place/{token}', MarketShowPageController::class)->name('market.show');
 
-
-
 // Admin routes - only accessible to users with appropriate permissions
 Route::prefix('admin')->name('admin.')->group(function () {
     // User management routes
