@@ -39,11 +39,11 @@ class SolanaAirDropController extends Controller
         }
 
         $wallet = $request->input('wallet');
-        $amount = $request->input('amount');
+        $amount = floatval($request->input('amount'));
         $email = $request->input('email');
 
-        // Convert SOL to lamports (1 SOL = 1,000,000,000 lamports)
-        $lamports = (int) (round($amount * 1000000000));
+        // Convert SOL to lamports with proper precision (1 SOL = 1,000,000,000 lamports)
+        $lamports = intval($amount * 1000000000);
 
         Log::info('Processing airdrop request', [
             'wallet' => $wallet,
@@ -53,96 +53,44 @@ class SolanaAirDropController extends Controller
         ]);
 
         try {
-            // METHOD 1: Try direct RPC call to Solana Devnet (most reliable)
-            Log::info('Attempting airdrop via RPC');
-            $signature = $this->requestAirdropViaRPC($wallet, $lamports);
+            // Try multiple RPC endpoints for better reliability
+            $endpoints = [
+                'https://api.devnet.solana.com',
+                'https://api.devnet.solana.com',
+                'https://rpc.ankr.com/solana_devnet',
+            ];
 
-            if ($signature) {
-                Log::info('Solana airdrop successful via RPC', [
-                    'wallet' => $wallet,
-                    'amount' => $amount,
-                    'signature' => $signature,
-                ]);
+            $signature = null;
+            foreach ($endpoints as $endpoint) {
+                Log::info("Attempting airdrop via RPC: {$endpoint}");
+                $signature = $this->requestAirdropViaRPC($wallet, $lamports, $endpoint);
 
-                // Send email notification if provided
-                if ($email) {
-                    // TODO: Implement email notification
-                    // Mail::to($email)->send(new AirdropCompleted($wallet, $amount, $signature));
+                if ($signature) {
+                    Log::info('Solana airdrop successful via RPC', [
+                        'endpoint' => $endpoint,
+                        'wallet' => $wallet,
+                        'amount' => $amount,
+                        'signature' => $signature,
+                    ]);
+
+                    return redirect()->back()->with([
+                        'success' => true,
+                        'message' => 'Airdrop successful!',
+                        'signature' => $signature,
+                        'wallet' => $wallet,
+                        'amount' => $amount,
+                    ]);
                 }
-
-                return back()->with([
-                    'success' => true,
-                    'message' => 'Airdrop successful',
-                    'signature' => $signature,
-                    'wallet' => $wallet,
-                    'amount' => $amount,
-                ]);
             }
 
-            Log::info('RPC method failed, trying faucet method');
+            // If all RPC methods fail, provide helpful error
+            Log::error('All airdrop methods failed');
 
-            // METHOD 2: Try official Solana faucet as fallback
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                ])
-                ->post('https://faucet.solana.com/api/request', [
-                    'recipient' => $wallet,
-                    'amount' => $lamports,
-                ]);
-
-            Log::info('Faucet response', [
-                'status' => $response->status(),
-                'body' => $response->body(),
+            return redirect()->back()->with([
+                'success' => false,
+                'message' => 'Unable to process airdrop. The devnet faucet may be rate-limited or temporarily unavailable. Please try again in a few minutes or use the official Solana CLI: solana airdrop ' . $amount . ' ' . $wallet . ' --url devnet',
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-
-                Log::info('Solana airdrop successful via faucet', [
-                    'wallet' => $wallet,
-                    'amount' => $amount,
-                    'signature' => $data['signature'] ?? null,
-                ]);
-
-                if ($email) {
-                    // TODO: Implement email notification
-                }
-
-                return back()->with([
-                    'success' => true,
-                    'message' => 'Airdrop successful',
-                    'signature' => $data['signature'] ?? null,
-                    'wallet' => $wallet,
-                    'amount' => $amount,
-                ]);
-            }
-
-            // If both methods fail
-            $errorMessage = 'Unable to process airdrop. The devnet faucet may be temporarily unavailable.';
-            $responseBody = $response->body();
-            $responseData = json_decode($responseBody, true);
-
-            // Check for specific error messages from the faucet
-            if ($responseData && isset($responseData['error'])) {
-                if (isset($responseData['error']['message'])) {
-                    $errorMessage = $responseData['error']['message'];
-                } elseif (is_string($responseData['error'])) {
-                    $errorMessage = $responseData['error'];
-                }
-            }
-
-            if ($response->status() === 429) {
-                $errorMessage = 'Rate limit exceeded. You\'ve either reached your airdrop limit today or the airdrop faucet has run dry. Please try again later or use an alternative faucet.';
-            }
-
-            Log::error('Airdrop request failed', [
-                'status' => $response->status(),
-                'response_body' => $responseBody,
-                'error_message' => $errorMessage,
-            ]);
-
-            throw new \Exception($errorMessage);
         } catch (\Exception $e) {
             Log::error('Solana airdrop failed', [
                 'wallet' => $wallet,
@@ -151,7 +99,7 @@ class SolanaAirDropController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->with([
+            return redirect()->back()->with([
                 'success' => false,
                 'message' => $e->getMessage(),
             ]);
@@ -161,23 +109,28 @@ class SolanaAirDropController extends Controller
     /**
      * Request airdrop directly via Solana Devnet RPC
      */
-    private function requestAirdropViaRPC(string $wallet, int $lamports): ?string
+    private function requestAirdropViaRPC(string $wallet, int $lamports, string $endpoint = 'https://api.devnet.solana.com'): ?string
     {
         try {
             Log::info('Making RPC request to Solana Devnet', [
+                'endpoint' => $endpoint,
                 'wallet' => $wallet,
                 'lamports' => $lamports,
             ]);
 
-            $response = Http::timeout(30)->post('https://api.devnet.solana.com', [
-                'jsonrpc' => '2.0',
-                'id' => 1,
-                'method' => 'requestAirdrop',
-                'params' => [
-                    $wallet,
-                    $lamports,
-                ],
-            ]);
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($endpoint, [
+                    'jsonrpc' => '2.0',
+                    'id' => 1,
+                    'method' => 'requestAirdrop',
+                    'params' => [
+                        $wallet,
+                        $lamports,
+                    ],
+                ]);
 
             Log::info('RPC response received', [
                 'status' => $response->status(),
@@ -189,15 +142,24 @@ class SolanaAirDropController extends Controller
 
                 if (isset($data['result'])) {
                     Log::info('RPC airdrop successful', ['signature' => $data['result']]);
+
+                    // Wait a moment and confirm the transaction
+                    sleep(2);
+                    $this->confirmTransaction($data['result'], $endpoint);
+
                     return $data['result'];
                 }
 
                 if (isset($data['error'])) {
-                    Log::warning('RPC airdrop error', ['error' => $data['error']]);
-                    
-                    // Check for specific error conditions
-                    if (isset($data['error']['code']) && $data['error']['code'] == 429) {
-                        Log::warning('RPC airdrop rate limited', ['error' => $data['error']]);
+                    $errorMsg = $data['error']['message'] ?? json_encode($data['error']);
+                    Log::warning('RPC airdrop error', [
+                        'error' => $data['error'],
+                        'code' => $data['error']['code'] ?? null,
+                    ]);
+
+                    // Check for rate limiting
+                    if (isset($data['error']['code']) && $data['error']['code'] == -32429) {
+                        throw new \Exception('Rate limit exceeded. Please wait a few minutes before trying again.');
                     }
                 }
             }
@@ -205,11 +167,40 @@ class SolanaAirDropController extends Controller
             return null;
         } catch (\Exception $e) {
             Log::error('RPC airdrop failed', [
+                'endpoint' => $endpoint,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return null;
+        }
+    }
+
+    /**
+     * Confirm transaction on the blockchain
+     */
+    private function confirmTransaction(string $signature, string $endpoint): bool
+    {
+        try {
+            $response = Http::timeout(10)->post($endpoint, [
+                'jsonrpc' => '2.0',
+                'id' => 1,
+                'method' => 'getSignatureStatuses',
+                'params' => [
+                    [$signature],
+                    ['searchTransactionHistory' => true]
+                ],
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('Transaction confirmation', ['data' => $data]);
+                return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            Log::warning('Transaction confirmation failed', ['error' => $e->getMessage()]);
+            return false;
         }
     }
 }
