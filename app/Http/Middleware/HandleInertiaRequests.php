@@ -49,6 +49,17 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Share flash messages
+            'success' => fn() => $request->session()->get('success'),
+            'message' => fn() => $request->session()->get('message'),
+            'signature' => fn() => $request->session()->get('signature'),
+            'wallet' => fn() => $request->session()->get('wallet'),
+            'amount' => fn() => $request->session()->get('amount'),
+            'flash' => [
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
+                'message' => fn() => $request->session()->get('message'),
+            ],
         ];
     }
 }

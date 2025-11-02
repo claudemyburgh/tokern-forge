@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-
 import { router, usePage } from '@inertiajs/react';
 import { CheckCircle2, Info, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -19,7 +18,6 @@ interface FormData {
 
 export default function SolanaAirdropForm() {
     const page = usePage();
-    const flashData = page.props as any;
 
     const [formData, setFormData] = useState<FormData>({
         wallet: '',
@@ -31,53 +29,59 @@ export default function SolanaAirdropForm() {
 
     // Handle flash messages from backend
     useEffect(() => {
-        // Reset loading state when page updates
-        setIsLoading(false);
+        const props = page.props as any;
 
-        if (flashData.success !== undefined) {
-            if (flashData.success) {
-                const shortWallet = flashData.wallet
-                    ? `${flashData.wallet.substring(0, 8)}...${flashData.wallet.substring(flashData.wallet.length - 4)}`
-                    : 'wallet';
+        console.log('=== PAGE PROPS UPDATED ===');
+        console.log('All props:', JSON.stringify(props, null, 2));
+        console.log('Success:', props.success);
+        console.log('Message:', props.message);
+        console.log('Signature:', props.signature);
+        console.log('Wallet:', props.wallet);
+        console.log('Amount:', props.amount);
+        console.log('========================');
 
-                toast.success('Airdrop Successful!', {
-                    description: (
-                        <div className="mt-2 space-y-2">
-                            <p>
-                                {flashData.amount} SOL sent to {shortWallet}
-                            </p>
-                            {flashData.signature && (
-                                <a
-                                    href={`https://explorer.solana.com/tx/${flashData.signature}?cluster=devnet`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block text-sm text-primary hover:underline"
-                                >
-                                    View on Solana Explorer →
-                                </a>
-                            )}
-                        </div>
-                    ),
-                    duration: 6000,
-                });
-
-                // Reset form on success
-                setFormData({ wallet: '', amount: '1', email: '' });
-                setErrors({});
-            } else if (flashData.message) {
-                toast('Airdrop Failed', {
-                    description: flashData.message,
-                    duration: 8000,
-                });
-            }
+        // Always reset loading state when props change
+        if (isLoading) {
+            console.log('Resetting loading state');
+            setIsLoading(false);
         }
-    }, [
-        flashData.success,
-        flashData.message,
-        flashData.signature,
-        flashData.wallet,
-        flashData.amount,
-    ]);
+
+        // Check for success/error flash messages
+        if (props.success === true) {
+            console.log('SUCCESS DETECTED - Showing success toast');
+            const shortWallet = props.wallet
+                ? `${props.wallet.substring(0, 8)}...${props.wallet.substring(props.wallet.length - 4)}`
+                : 'wallet';
+
+            toast.success(
+                `✅ Airdrop Successful! ${props.amount} SOL sent to ${shortWallet}`,
+                {
+                    description: props.signature ? (
+                        <a
+                            href={`https://explorer.solana.com/tx/${props.signature}?cluster=devnet`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 block text-sm hover:underline"
+                        >
+                            View on Solana Explorer →
+                        </a>
+                    ) : undefined,
+                    duration: 6000,
+                    dismissible: true,
+                    position: 'top-right',
+                },
+            );
+
+            // Reset form on success
+            setFormData({ wallet: '', amount: '1', email: '' });
+            setErrors({});
+        } else if (props.success === false && props.message) {
+            toast.error('❌ Airdrop Failed', {
+                description: props.message,
+                duration: 8000,
+            });
+        }
+    }, [isLoading, page.props]);
 
     // Real-time wallet validation
     useEffect(() => {
@@ -151,9 +155,7 @@ export default function SolanaAirdropForm() {
         e.preventDefault();
 
         if (!validateForm()) {
-            toast.error('Validation Error', {
-                description: 'Please fix the form errors before submitting',
-            });
+            toast.error('Please fix the form errors before submitting');
             return;
         }
 
@@ -165,18 +167,23 @@ export default function SolanaAirdropForm() {
             email: formData.email.trim() || undefined,
         };
 
+        console.log('Submitting airdrop request:', submitData);
+
         router.post('/tools/solana-air-drop/request', submitData, {
             preserveScroll: true,
-            preserveState: true,
             onError: (errors) => {
                 console.error('Validation errors:', errors);
                 setIsLoading(false);
-                toast.error('Validation Error', {
-                    description: 'Please check the form for errors',
-                });
+                toast.error('Please check the form for errors');
             },
             onFinish: () => {
-                // Loading state will be reset by useEffect when flash data arrives
+                console.log('Request finished');
+                // Make sure loading is reset even if useEffect doesn't fire
+                setTimeout(() => {
+                    if (isLoading) {
+                        setIsLoading(false);
+                    }
+                }, 500);
             },
         });
     };
