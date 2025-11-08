@@ -19,6 +19,7 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
     // You can also provide a custom RPC endpoint
     const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
+    // Create wallet adapters with proper error handling
     const wallets = useMemo(
         () => [
             /**
@@ -41,7 +42,8 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
 
     return (
         <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={wallets} autoConnect>
+            {/* Disable autoConnect to prevent connection issues with Phantom */}
+            <WalletProvider wallets={wallets} autoConnect={false}>
                 <WalletModalProvider>{children}</WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>

@@ -11,7 +11,7 @@ export function AppSidebarHeader({
 }: {
     breadcrumbs?: BreadcrumbItemType[];
 }) {
-    const { connected, publicKey } = useWallet();
+    const { connected, publicKey, wallet } = useWallet();
 
     const formatPublicKey = (key: string | undefined) => {
         if (!key) return '';
@@ -54,7 +54,7 @@ export function AppSidebarHeader({
                     }}
                 >
                     {connected
-                        ? formatPublicKey(publicKey?.toBase58())
+                        ? `${wallet?.adapter.name}: ${formatPublicKey(publicKey?.toBase58())}`
                         : 'Connect Wallet'}
                 </WalletMultiButton>
             </div>
